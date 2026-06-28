@@ -90,6 +90,43 @@ criteria are reported + summarised per area but never widen the headline claim.
 
 `import { reprDigest, securityTxt, securityTxtExpires, webManifest, markdownSiblingHeaders } from "…/emitters/index.mjs"` — pure helpers a site's own `build.mjs` calls to emit standards-compliant artifacts (RFC 9530 `Repr-Digest`, RFC 9116 `security.txt`, the W3C web app manifest, the `_headers` Content-Type rules for `.md` siblings). All values injected; the page **content** stays in the site.
 
+## Publishing `@bounded-systems/verify` (JSR)
+
+The in-process Sigstore verifier (`integrity/verify/verify.mjs`) is **published from
+this kit** as [`@bounded-systems/verify`](https://jsr.io/@bounded-systems/verify) on
+JSR — this repo is its canonical home (the standalone verifier used to live in
+`bounded.tools`; it now lives here and the kit owns its release). Consumers run it
+straight from JSR:
+
+```sh
+deno run -A jsr:@bounded-systems/verify https://your-site
+```
+
+The package manifest is [`integrity/verify/deno.json`](./integrity/verify/deno.json)
+(`name`, `version`, `exports → verify.mjs`, the `npm:sigstore` import, MIT). Plain JS,
+so it publishes with `--allow-slow-types`.
+
+**Cut a release** (publishing is keyless via GitHub Actions OIDC — no tokens):
+
+1. Bump `version` in `integrity/verify/deno.json` and commit.
+2. Tag and push — the tag prefix is `verify-v` so it never collides with the kit's
+   own versioning:
+
+   ```sh
+   git tag verify-v0.1.0
+   git push origin verify-v0.1.0
+   ```
+
+   `.github/workflows/publish-verify.yml` (trigger `verify-v*`, `permissions:
+   id-token: write`) runs `deno publish --allow-slow-types`. It can also be run by
+   hand from the Actions tab (`workflow_dispatch`).
+
+Verify locally before tagging:
+
+```sh
+cd integrity/verify && deno publish --dry-run --allow-slow-types
+```
+
 ## Test
 
 ```
