@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "@bounded-systems/lone": "jsr:@bounded-systems/lone@^0.1",
+    "zod": "npm:zod@3",
+    "linkedom": "npm:linkedom@0.15.3"
+  }
+}

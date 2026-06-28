@@ -1,0 +1,42 @@
+{
+  "name": "@bounded-systems/conformance-kit",
+  "note": "Extraction provenance: which source repo + commit each tool in this kit was generalized from. The tools here are now the canonical, site-agnostic versions; site-specific values are injected by the consumer (see README). A consuming site vendors this kit hash-pinned via the `vendor.example.json` shape.",
+  "extractedFrom": [
+    {
+      "source": "https://github.com/bdelanghe/site",
+      "commit": "24213f7d2fb8069f1df6137789769912eddd3546",
+      "fetched": "2026-06-27",
+      "files": [
+        "gates/sbom/gen-sbom.mjs        ← scripts/gen-sbom.mjs",
+        "gates/sbom/check-sbom.mjs      ← scripts/check-sbom.mjs",
+        "gates/shacl-runner.mjs         ← scripts/shacl-gate.mjs",
+        "gates/seo-gate.mjs             ← scripts/seo-gate.mjs",
+        "gates/commonmark-runner.mjs    ← scripts/commonmark-gate.mjs",
+        "gates/readability-gate.mjs     ← scripts/readability-gate.mjs",
+        "gates/semantic/gate.ts         ← semantic/gate.ts",
+        "gates/semantic/deno.json       ← semantic/deno.json",
+        "generators/gen-cid.mjs         ← scripts/gen-cid.mjs",
+        "generators/gen-identity.mjs    ← scripts/gen-identity.mjs",
+        "generators/openapi.mjs         ← scripts/gen-api.mjs (generic core)",
+        "emitters/index.mjs             ← build.mjs (security.txt / web manifest / Repr-Digest / .md siblings)",
+        "lib/schema-validate.mjs        ← schema-validate.mjs",
+        "integrity/http-probe.mjs       ← vendor/integrity/http-probe.mjs"
+      ]
+    },
+    {
+      "source": "https://github.com/bounded-systems/site",
+      "commit": "c27e1af25110f1ec95eb5b4872e675253430abb6",
+      "path": "integrity/",
+      "fetched": "2026-06-27",
+      "files": [
+        "integrity/verify-site.mjs               ← integrity/verify-site.mjs",
+        "integrity/verify/verify.mjs             ← integrity/verify/verify.mjs",
+        "integrity/verify/package.json           ← integrity/verify/package.json",
+        "integrity/gen-sitemanifest.mjs          ← integrity/scripts/gen-sitemanifest.mjs",
+        "integrity/gen-provenance.mjs            ← integrity/scripts/gen-provenance.mjs",
+        "integrity/structure-audit/audit.mjs     ← integrity/structure-audit/audit.mjs",
+        "integrity/structure-audit/package.json  ← integrity/structure-audit/package.json"
+      ]
+    }
+  ]
+}

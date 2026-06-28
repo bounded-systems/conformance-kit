@@ -1,0 +1,38 @@
+{
+  "name": "@bounded-systems/conformance-kit",
+  "version": "0.1.0",
+  "description": "Standalone, site-agnostic web-conformance toolkit: integrity tooling + build gates + provenance generators, all parameterized so a site vendors one kit instead of duplicating scripts.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bounded-systems/conformance-kit.git"
+  },
+  "bin": {
+    "ck-gen-sitemanifest": "./integrity/gen-sitemanifest.mjs",
+    "ck-gen-provenance": "./integrity/gen-provenance.mjs",
+    "ck-verify-site": "./integrity/verify-site.mjs",
+    "ck-http-probe": "./integrity/http-probe.mjs",
+    "ck-structure-audit": "./integrity/structure-audit/audit.mjs",
+    "ck-gen-sbom": "./gates/sbom/gen-sbom.mjs",
+    "ck-check-sbom": "./gates/sbom/check-sbom.mjs",
+    "ck-shacl-runner": "./gates/shacl-runner.mjs",
+    "ck-seo-gate": "./gates/seo-gate.mjs",
+    "ck-readability-gate": "./gates/readability-gate.mjs",
+    "ck-commonmark-runner": "./gates/commonmark-runner.mjs",
+    "ck-gen-cid": "./generators/gen-cid.mjs",
+    "ck-gen-identity": "./generators/gen-identity.mjs"
+  },
+  "scripts": {
+    "test": "node test/run.mjs"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.5.0",
+    "@zazuko/env-node": "^2.1.5",
+    "jsonld": "^8.3.2",
+    "linkedom": "^0.18.0",
+    "n3": "^1.17.3",
+    "rdf-validate-shacl": "^0.5.10",
+    "sigstore": "^5.0.0"
+  }
+}

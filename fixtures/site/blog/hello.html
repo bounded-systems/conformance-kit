@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Hello, conformance — Fixture Site</title>
+  <meta name="description" content="A sample article used to exercise the reader-survivability check.">
+  <link rel="canonical" href="https://fixture.example/blog/hello">
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Hello, conformance</h1>
+      <p>Hello, conformance. This is a sample article whose only job is to carry
+      enough real prose that Mozilla Readability — the same engine Firefox Reader
+      View runs — can extract it cleanly after the stylesheet is stripped away.</p>
+      <p>The structure-audit gate runs that extraction as a survivability check: if
+      the semantics of a page live only in CSS, the reader view collapses and the
+      gate fails. A genuine article with paragraphs, headings, and links survives.</p>
+      <p>Because this paragraph and its siblings hold well over two hundred
+      characters of meaningful text, the reader extraction succeeds and the audit
+      records a passing structure for the page.</p>
+      <nav><a href="/blog">Back to writing</a></nav>
+    </article>
+  </main>
+</body>
+</html>

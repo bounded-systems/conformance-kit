@@ -1,0 +1,25 @@
+{
+  "source": "https://github.com/bounded-systems/conformance-kit",
+  "ref": "REPLACE_WITH_PINNED_COMMIT_SHA",
+  "commit": "REPLACE_WITH_PINNED_COMMIT_SHA",
+  "fetched": "YYYY-MM-DD",
+  "note": "Vendored, hash-pinned copy of bounded-systems/conformance-kit. This is the shape a consuming site writes to vendor/conformance-kit/provenance.json (mirrors bdelanghe/site vendor/integrity/provenance.json). Re-vendor by copying the kit at the pinned commit; verify before use by re-hashing each file and comparing to these sha256 values. Generate the files map with, e.g.: `for f in $(git -C kit ls-files); do printf '\"%s\": \"sha256:%s\",\\n' \"$f\" $(sha256sum kit/$f | cut -d' ' -f1); done`",
+  "files": {
+    "integrity/verify-site.mjs": "sha256:<fill-in>",
+    "integrity/gen-sitemanifest.mjs": "sha256:<fill-in>",
+    "integrity/gen-provenance.mjs": "sha256:<fill-in>",
+    "integrity/http-probe.mjs": "sha256:<fill-in>",
+    "integrity/structure-audit/audit.mjs": "sha256:<fill-in>",
+    "gates/sbom/gen-sbom.mjs": "sha256:<fill-in>",
+    "gates/sbom/check-sbom.mjs": "sha256:<fill-in>",
+    "gates/shacl-runner.mjs": "sha256:<fill-in>",
+    "gates/seo-gate.mjs": "sha256:<fill-in>",
+    "gates/readability-gate.mjs": "sha256:<fill-in>",
+    "gates/commonmark-runner.mjs": "sha256:<fill-in>",
+    "generators/gen-cid.mjs": "sha256:<fill-in>",
+    "generators/gen-identity.mjs": "sha256:<fill-in>",
+    "generators/openapi.mjs": "sha256:<fill-in>",
+    "emitters/index.mjs": "sha256:<fill-in>",
+    "lib/schema-validate.mjs": "sha256:<fill-in>"
+  }
+}

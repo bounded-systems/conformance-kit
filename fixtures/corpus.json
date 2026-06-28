@@ -1,0 +1,5 @@
+[
+  { "id": "home.summary", "text": "This fixture corpus carries a few short paragraphs of plain technical prose so the readability gate has real sentences to score." },
+  { "id": "home.intro", "text": "Each atom is hand written and kept terse. The gate reports a reading-grade signal and flags long sentences, passive voice, and unexplained acronyms." },
+  { "id": "blog.lede", "text": "A readability signal is not a cognitive-load score. It estimates a US reading grade from sentence length and syllables, which is useful but coarse." }
+]
