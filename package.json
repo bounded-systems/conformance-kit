@@ -18,6 +18,7 @@
     "ck-check-sbom": "./gates/sbom/check-sbom.mjs",
     "ck-shacl-runner": "./gates/shacl-runner.mjs",
     "ck-seo-gate": "./gates/seo-gate.mjs",
+    "ck-axe-gate": "./gates/axe-gate.mjs",
     "ck-readability-gate": "./gates/readability-gate.mjs",
     "ck-commonmark-runner": "./gates/commonmark-runner.mjs",
     "ck-gen-cid": "./generators/gen-cid.mjs",
@@ -29,6 +30,7 @@
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
     "@zazuko/env-node": "^2.1.5",
+    "axe-core": "^4.10.0",
     "jsonld": "^8.3.2",
     "linkedom": "^0.18.0",
     "n3": "^1.17.3",

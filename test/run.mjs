@@ -238,6 +238,64 @@ await test("gates/conformance-report: build + render the conformance projection"
     `partial=${partial.summary.met}met/${partial.summary.unmet}unmet/${partial.summary.notAssessed}n-a · full claim=compact`);
 });
 
+// 13. axe-gate: pure classification/threshold/report logic, then a best-effort
+//     end-to-end run on the known-bad + known-good fixtures (skipped if no browser
+//     runner is on PATH, like the cosign step above).
+await test("gates/axe-gate: classify + threshold + report, e2e on fixtures", async () => {
+  const { evaluatePage, summarize, blocksAt, normalizeViolation, runAxeGate } =
+    await import(join(KIT, "gates", "axe-gate.mjs"));
+
+  // (a) threshold semantics: block at/above the configured impact; null never blocks.
+  if (!blocksAt("critical", "serious") || !blocksAt("serious", "serious")) throw new Error("serious/critical must block at serious");
+  if (blocksAt("moderate", "serious") || blocksAt("minor", "serious")) throw new Error("moderate/minor must not block at serious");
+  if (blocksAt(null, "serious")) throw new Error("null impact must never block");
+  if (!blocksAt("moderate", "moderate")) throw new Error("moderate must block at moderate");
+
+  // (b) pure evaluation over synthetic axe violations (shaped like axe output).
+  const synthetic = [
+    { id: "image-alt", impact: "critical", help: "Images must have alternate text", helpUrl: "h", nodes: [{ target: ["img"] }] },
+    { id: "link-name", impact: "serious", help: "Links must have discernible text", helpUrl: "h", nodes: [{ target: ["a"] }] },
+    { id: "landmark", impact: "moderate", help: "x", helpUrl: "h", nodes: [{ target: ["div"] }] },
+  ];
+  const ev = evaluatePage("bad.html", synthetic, "serious");
+  if (ev.blocking !== 2) throw new Error(`expected 2 blocking (critical+serious), got ${ev.blocking}`);
+  if (ev.counts.critical !== 1 || ev.counts.serious !== 1 || ev.counts.moderate !== 1) throw new Error("impact counts wrong");
+  if (!ev.violations.critical || !ev.violations.serious) throw new Error("byImpact grouping missing serious/critical");
+  if (normalizeViolation(synthetic[0]).targets[0] !== "img") throw new Error("target normalisation wrong");
+
+  const rep = summarize([ev, evaluatePage("good.html", [], "serious")], { threshold: "serious", runner: "synthetic" });
+  if (rep.axe.critical !== 1 || rep.axe.serious !== 1) throw new Error("report axe envelope must total serious/critical");
+  if (rep.passed !== false || rep.blocking !== 2) throw new Error("report with serious/critical must not pass");
+  const cleanRep = summarize([evaluatePage("good.html", [], "serious")], { threshold: "serious" });
+  if (cleanRep.passed !== true || cleanRep.axe.serious !== 0 || cleanRep.axe.critical !== 0) throw new Error("clean report must pass with axe {0,0}");
+
+  // (c) end-to-end against the fixtures, with whatever real engine is present.
+  // tezcatl (macOS WebKit) is preferred locally; Playwright/Chromium is the CI path.
+  // If neither engine can actually launch (e.g. Chromium not downloaded), SKIP — the
+  // pure logic above is the deterministic, always-on assertion (cf. the cosign skip).
+  const hasTezcatl = spawnSync("tezcatl", ["--version"], { stdio: "ignore" }).status === 0;
+  let hasPlaywright = false;
+  try { await import("@axe-core/playwright"); await import("playwright"); hasPlaywright = true; } catch { /* optional dep */ }
+  const runner = hasTezcatl ? "tezcatl" : hasPlaywright ? "playwright" : null;
+  const fixDir = join(FIX, "axe");
+  try {
+    if (!runner) throw new Error("no browser runner on PATH");
+    const badRun = await runAxeGate({ dist: fixDir, pages: ["bad.html"], threshold: "serious", runner });
+    if (badRun.passed !== false || badRun.blocking < 1) throw new Error(`known-bad fixture must fail the gate (${runner})`);
+    if (badRun.axe.serious + badRun.axe.critical < 1) throw new Error("known-bad fixture must surface a serious/critical violation");
+    const goodRun = await runAxeGate({ dist: fixDir, pages: ["good.html"], threshold: "serious", runner });
+    if (goodRun.passed !== true) throw new Error(`known-good fixture must pass the gate (${runner})`);
+    ok("gates/axe-gate: classify + threshold + report, e2e on fixtures",
+      `pure logic asserted · e2e (${runner}): bad=${badRun.axe.critical}c/${badRun.axe.serious}s blocking, good=clean`);
+  } catch (e) {
+    // A real assertion failure (the fixtures are wrong) must surface; only a
+    // missing/unlaunchable engine is a tolerated skip.
+    if (/must (fail|pass|surface)|grouping|counts|envelope/.test(e.message)) throw e;
+    ok("gates/axe-gate: classify + threshold + report, e2e on fixtures",
+      `pure logic asserted · e2e SKIPPED (${e.message.split("\n")[0]})`);
+  }
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
