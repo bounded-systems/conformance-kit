@@ -439,22 +439,32 @@ const CWV_SAMPLE_SHAPE = {
 const ENVELOPE = {
   // tier-1
   htmlValidator: opt(vObject({ errors: req(vInt0), warnings: opt(vInt0) })),
+  // `verifiedBy` (an independent assessor) is REQUIRED for `a11y.wcag22-aa-manual`
+  // to reach `met`; absent it the criterion is `not-assessed` — a self-attested
+  // manual audit never gates the compact claim.
   manualA11y: opt(vObject({
     wcag22AA: req(vBool),
     keyboardTested: req(vBool),
     screenReaderTested: req(vBool),
     completeFlows: req(vBool),
+    verifiedBy: opt(vStr),
   })),
   wcag22AAA: opt(vObject({ criteria: def(vArrayOf(vStr), []), met: req(vBool) })),
   axe: opt(vObject({ serious: req(vInt0), critical: req(vInt0) })),
-  security: opt(vObject({
+  // OWASP ASVS attestation — the self-graded part. `verifiedBy` (an independent
+  // assessor) is REQUIRED for `security.asvs` to reach `met`; absent it the
+  // criterion is `not-assessed` (self-attestation never gates the compact claim).
+  asvs: opt(vObject({
     standard: def(vStr, "OWASP ASVS"),
     version: def(vStr, "5.0.0"),
     achievedLevel: req(vEnum(1, 2, 3)),
     targetLevel: def(vEnum(1, 2, 3), 2),
-    knownCriticalOrHighVulns: req(vInt0),
     verifiedBy: opt(vStr),
   })),
+  // Known critical/high vulnerabilities — the TOOL-measured part (e.g. `npm audit`,
+  // OSV). Decoupled from `asvs` so an objective vuln count can be supplied WITHOUT
+  // also self-grading an ASVS level.
+  vulns: opt(vObject({ knownCriticalOrHighVulns: req(vInt0) })),
   coreWebVitals: opt(vArrayOf(vObject(CWV_SAMPLE_SHAPE))),
   baseline: opt(vObject({
     status: req(vEnum("widely", "newly", "limited")),

@@ -171,8 +171,9 @@ await test("gates/conformance-report: build + render the conformance projection"
     evidence: {
       htmlValidator: { errors: 0 },
       axe: { serious: 0, critical: 0 },
-      manualA11y: { wcag22AA: true, keyboardTested: true, screenReaderTested: true, completeFlows: true },
-      security: { achievedLevel: 2, targetLevel: 2, knownCriticalOrHighVulns: 0 },
+      manualA11y: { wcag22AA: true, keyboardTested: true, screenReaderTested: true, completeFlows: true, verifiedBy: "Acme Accessibility Auditors" },
+      asvs: { achievedLevel: 2, targetLevel: 2, verifiedBy: "Acme Security Labs" },
+      vulns: { knownCriticalOrHighVulns: 0 },
       coreWebVitals: [
         { formFactor: "mobile", percentile: 75, lcpMs: 1800, inpMs: 90, cls: 0.02 },
         { formFactor: "desktop", percentile: 75, lcpMs: 1200, inpMs: 40, cls: 0.01 },
@@ -184,6 +185,37 @@ await test("gates/conformance-report: build + render the conformance projection"
   });
   if (full.conformant !== true) throw new Error("clean DOM + full tier-1 evidence should be conformant");
   if (full.claim !== COMPACT_CLAIM) throw new Error("should emit the canonical COMPACT_CLAIM verbatim");
+
+  // (c) self-attestation WITHOUT an independent verifier never gates the claim:
+  // the same clean booleans, minus verifiedBy, must demote to not-assessed.
+  const selfAttested = buildConformanceReport({
+    loneFindings: [],
+    evidence: {
+      htmlValidator: { errors: 0 },
+      axe: { serious: 0, critical: 0 },
+      manualA11y: { wcag22AA: true, keyboardTested: true, screenReaderTested: true, completeFlows: true }, // no verifiedBy
+      asvs: { achievedLevel: 2, targetLevel: 2 }, // no verifiedBy
+      vulns: { knownCriticalOrHighVulns: 0 },
+      coreWebVitals: [
+        { formFactor: "mobile", percentile: 75, lcpMs: 1800, inpMs: 90, cls: 0.02 },
+        { formFactor: "desktop", percentile: 75, lcpMs: 1200, inpMs: 40, cls: 0.01 },
+      ],
+      baseline: { status: "widely" },
+      reliability: { uncaughtErrors: 0, brokenInternalLinks: 0, e2eCriticalJourneys: true },
+    },
+  });
+  const byIdSelf = Object.fromEntries(selfAttested.results.map((r) => [r.id, r]));
+  if (byIdSelf["security.asvs"].status !== "not-assessed") throw new Error("self-attested ASVS (no verifiedBy) must be not-assessed");
+  if (byIdSelf["a11y.wcag22-aa-manual"].status !== "not-assessed") throw new Error("self-attested manual WCAG (no verifiedBy) must be not-assessed");
+  if (byIdSelf["security.no-critical-vulns"].status !== "met") throw new Error("decoupled vulns must stand alone as met");
+  if (selfAttested.conformant !== false) throw new Error("self-attestation alone must NOT yield the compact claim");
+
+  // (d) vulns decoupled from ASVS: an objective vuln count with NO asvs object at
+  // all is still assessable on its own.
+  const vulnsOnly = buildConformanceReport({ evidence: { vulns: { knownCriticalOrHighVulns: 3 } } });
+  const byIdV = Object.fromEntries(vulnsOnly.results.map((r) => [r.id, r]));
+  if (byIdV["security.no-critical-vulns"].status !== "unmet") throw new Error("3 vulns must be unmet, no asvs object required");
+  if (byIdV["security.asvs"].status !== "not-assessed") throw new Error("absent asvs must be not-assessed");
 
   // malformed envelope → throw (lone refuses to guess).
   let threw = false;

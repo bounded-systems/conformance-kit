@@ -55,13 +55,19 @@ const EXTERNAL_EVALUATORS = {
     const v = e.manualA11y;
     if (!v) return notAssessed("no manual WCAG 2.2 AA audit supplied");
     const ok = v.wcag22AA && v.keyboardTested && v.screenReaderTested && v.completeFlows;
-    if (ok) return met("manual AA audit attested across complete flows");
-    const gaps = [];
-    if (!v.wcag22AA) gaps.push("AA not attested");
-    if (!v.keyboardTested) gaps.push("keyboard not tested");
-    if (!v.screenReaderTested) gaps.push("screen reader not tested");
-    if (!v.completeFlows) gaps.push("flows incomplete");
-    return unmet(gaps.join(", "));
+    if (!ok) {
+      const gaps = [];
+      if (!v.wcag22AA) gaps.push("AA not attested");
+      if (!v.keyboardTested) gaps.push("keyboard not tested");
+      if (!v.screenReaderTested) gaps.push("screen reader not tested");
+      if (!v.completeFlows) gaps.push("flows incomplete");
+      return unmet(gaps.join(", "));
+    }
+    // Attested clean — but a self-attested manual audit never gates the claim.
+    if (!v.verifiedBy) {
+      return notAssessed("manual AA audit self-attested; independent verification required (set manualA11y.verifiedBy)");
+    }
+    return met(`manual AA audit attested across complete flows, verified by ${v.verifiedBy}`);
   },
   "a11y.wcag22-aaa-selected": (e) => {
     const v = e.wcag22AAA;
@@ -71,14 +77,17 @@ const EXTERNAL_EVALUATORS = {
       : unmet("selected AAA not met");
   },
   "security.asvs": (e) => {
-    const v = e.security;
-    if (!v) return notAssessed("no OWASP ASVS attestation supplied");
-    return v.achievedLevel >= v.targetLevel
-      ? met(`ASVS ${v.version} Level ${v.achievedLevel} (target L${v.targetLevel})`)
-      : unmet(`ASVS Level ${v.achievedLevel} below target L${v.targetLevel}`);
+    const v = e.asvs;
+    if (!v || v.achievedLevel == null) return notAssessed("no OWASP ASVS attestation supplied");
+    if (v.achievedLevel < v.targetLevel) return unmet(`ASVS Level ${v.achievedLevel} below target L${v.targetLevel}`);
+    // Level reached — but a self-graded ASVS attestation never gates the claim.
+    if (!v.verifiedBy) {
+      return notAssessed(`ASVS L${v.achievedLevel} self-attested; independent verification required (set asvs.verifiedBy)`);
+    }
+    return met(`ASVS ${v.version} Level ${v.achievedLevel} (target L${v.targetLevel}), verified by ${v.verifiedBy}`);
   },
   "security.no-critical-vulns": (e) => {
-    const v = e.security;
+    const v = e.vulns;
     if (!v) return notAssessed("no vulnerability report supplied");
     return v.knownCriticalOrHighVulns === 0
       ? met("0 known critical/high vulns")
