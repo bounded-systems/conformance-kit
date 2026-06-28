@@ -1,0 +1,27 @@
+integrity/verify/README.md
+  s_98e316d0b3248a::t_9720c5505249a0 1-39
+integrity/verify/deno.json
+  s_98e316d0b3248a::t_dd40e51cdaf603 6
+  s_98e316d0b3248a::t_a9908f4f5c6e2d 5
+  s_98e316d0b3248a::t_0f1268380b5724 1-4,7-13
+.github/workflows/publish-verify.yml
+  s_98e316d0b3248a::t_a5e744ad15b293 1-34
+README.md
+  s_98e316d0b3248a::t_a0b19a26920251 93-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "004aefd7e970e836f700d0b3bc81561080fe6c3e",
+  "prompts": {},
+  "sessions": {
+    "s_98e316d0b3248a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8db980ee-eb6b-4866-832b-f795cef7f33c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
