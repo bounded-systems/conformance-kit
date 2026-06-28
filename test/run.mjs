@@ -138,6 +138,68 @@ await test("generators/openapi: validateOpenapi", async () => {
   ok("generators/openapi: validateOpenapi", `good=ok, broken flagged ${e2.length}`);
 });
 
+// 12. conformance-report: lone's conformance() model + the generic renderer.
+await test("gates/conformance-report: build + render the conformance projection", async () => {
+  const { buildConformanceReport, renderConformanceReport, COMPACT_CLAIM, CRITERIA } =
+    await import(join(KIT, "gates", "conformance-report.mjs"));
+
+  // (a) DOM not blessed + only build-derived evidence supplied → honest partial.
+  const partial = buildConformanceReport({
+    loneFindings: null, // no DOM blessed in this context
+    evidence: {
+      contentDigests: { reprDigestHeaders: true },
+      feeds: { atomValid: true },
+      sbom: { present: true, valid: true, complete: true, signed: false }, // unmet
+      jsonLdShacl: undefined, // pruned → not-assessed
+      // manual a11y / axe / ASVS / CWV / Baseline: not supplied → not-assessed
+    },
+  });
+  if (partial.results.length !== CRITERIA.length) throw new Error("result count != criteria count");
+  if (partial.conformant !== false) throw new Error("must not be conformant without tier-1 evidence");
+  if (partial.claim === COMPACT_CLAIM) throw new Error("emitted the strong claim without gating evidence");
+  if (!/^Partial conformance:/.test(partial.claim)) throw new Error(`expected a partial claim, got: ${partial.claim}`);
+  const byId = Object.fromEntries(partial.results.map((r) => [r.id, r]));
+  if (byId["integrity.content-digests"].status !== "met") throw new Error("content-digests should be met");
+  if (byId["integrity.sbom"].status !== "unmet") throw new Error("unsigned SBOM should be unmet");
+  if (byId["security.asvs"].status !== "not-assessed") throw new Error("unsupplied ASVS must be not-assessed, never unmet");
+  if (byId["a11y.wcag22-aa-manual"].status !== "not-assessed") throw new Error("unsupplied manual WCAG must be not-assessed");
+  if (byId["html.dom-author-requirements"].status !== "not-assessed") throw new Error("unblessed DOM must be not-assessed");
+
+  // (b) clean DOM + every tier-1 external supplied & passing → the strong claim.
+  const full = buildConformanceReport({
+    loneFindings: [], // lone ran, found nothing
+    evidence: {
+      htmlValidator: { errors: 0 },
+      axe: { serious: 0, critical: 0 },
+      manualA11y: { wcag22AA: true, keyboardTested: true, screenReaderTested: true, completeFlows: true },
+      security: { achievedLevel: 2, targetLevel: 2, knownCriticalOrHighVulns: 0 },
+      coreWebVitals: [
+        { formFactor: "mobile", percentile: 75, lcpMs: 1800, inpMs: 90, cls: 0.02 },
+        { formFactor: "desktop", percentile: 75, lcpMs: 1200, inpMs: 40, cls: 0.01 },
+      ],
+      baseline: { status: "widely" },
+      reliability: { uncaughtErrors: 0, brokenInternalLinks: 0, e2eCriticalJourneys: true },
+      // tier-2/3 left unsupplied: must NOT affect the tier-1 compact claim.
+    },
+  });
+  if (full.conformant !== true) throw new Error("clean DOM + full tier-1 evidence should be conformant");
+  if (full.claim !== COMPACT_CLAIM) throw new Error("should emit the canonical COMPACT_CLAIM verbatim");
+
+  // malformed envelope → throw (lone refuses to guess).
+  let threw = false;
+  try { buildConformanceReport({ evidence: { sbom: { present: "yes" } } }); } catch { threw = true; }
+  if (!threw) throw new Error("a malformed envelope must throw");
+
+  // renderer: semantic, class-based, evidence links injected by the consumer.
+  const html = renderConformanceReport(partial, { evidenceHref: (c) => `/evidence/${c.id}` });
+  for (const needle of ['class="ck-conformance"', "ck-status--met", "ck-status--not-assessed", "ck-area__summary", "/evidence/integrity.sbom"]) {
+    if (!html.includes(needle)) throw new Error(`renderer output missing ${needle}`);
+  }
+  if (/style=/.test(html)) throw new Error("renderer must not emit inline styles");
+  ok("gates/conformance-report: build + render the conformance projection",
+    `partial=${partial.summary.met}met/${partial.summary.unmet}unmet/${partial.summary.notAssessed}n-a · full claim=compact`);
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

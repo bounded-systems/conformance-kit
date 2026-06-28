@@ -13,6 +13,7 @@ hardcodes `robertdelanghe.dev`, `bounded.tools`, an account, or an email.
 ```
 integrity/    verify-site · verify (sigstore) · gen-sitemanifest · gen-provenance · structure-audit · http-probe
 gates/        sbom (gen + completeness) · shacl-runner · seo-gate · readability-gate · commonmark-runner · semantic (lone)
+gates/conformance/  conformance-report — lone's conformance() projection (Node port of jsr:@bounded-systems/lone@0.4) + a generic HTML renderer
 generators/   gen-cid (IPFS UnixFS) · gen-identity (did:web + VC) · openapi (static-API helper core)
 emitters/     reprDigest (RFC 9530) · securityTxt (RFC 9116) · webManifest · markdown-sibling headers
 lib/          schema-validate (zero-dep JSON Schema) · config (env/arg helpers)
@@ -68,6 +69,14 @@ in-process verifier). The Deno semantic runner pins its imports in
 | `readability-gate.mjs` | `node …/readability-gate.mjs <corpus.json> [--strict]` | **The corpus is an input** the site assembles from its copy: a JSON array of `{id,text}` or an `{id:text}` map. Optional `$READABILITY_THRESHOLDS`, `$READABILITY_MIN_WORDS`, `$READABILITY_KNOWN_ACRONYMS`. WARN-only unless `--strict`. |
 | `commonmark-runner.mjs` | `node …/commonmark-runner.mjs <renderer.mjs> [fixtures.json]` | **The site's markdown renderer module** (export `renderMarkdown`, or set `$COMMONMARK_RENDER_EXPORT`). Default fixtures pin a safe CommonMark subset + 4 hostile-HTML escapes; a site with a different renderer supplies its own `fixtures.json`. |
 | `semantic/gate.ts` | `deno run --allow-read --allow-net …/gate.ts` | Built HTML in `$SEMANTIC_DIR` (default `dist/blog`); `$SEMANTIC_SELECTOR` (subject node, default `article`). Imports `jsr:@bounded-systems/lone`; any error-severity finding fails CI. |
+| `conformance-report.mjs` | `import { buildConformanceReport, renderConformanceReport } from "…/gates/conformance-report.mjs"` | **The site's evidence** — `loneFindings` (the semantic gate's DOM findings, or `null` when no DOM was blessed → those criteria report `not-assessed`) + an external-evidence envelope whose fields it gathers from its own gates (`jsonLdShacl`, `sbom`, `contentDigests`, `slsaProvenance`, …). `renderConformanceReport(report, { evidenceHref })` → a class-based HTML fragment; the consumer wraps it in its template and supplies per-criterion evidence URLs. Zero-dep; the conformance MODEL is a Node port of `jsr:@bounded-systems/lone@0.4`'s `conformance()` in `gates/conformance/`. |
+
+The conformance projection makes overclaim impossible by construction: the strong
+compact claim (`COMPACT_CLAIM`) is emitted **only** when every tier-1 `required`
+criterion has passing evidence; unsupplied criteria (manual WCAG audit, OWASP ASVS,
+field Core Web Vitals, Baseline) are `not-assessed`, never `met` — so automation can
+never print "WCAG 2.2 AA" or "ASVS conformant" on its own. tier-2/tier-3/cognitive
+criteria are reported + summarised per area but never widen the headline claim.
 
 ### generators/
 
