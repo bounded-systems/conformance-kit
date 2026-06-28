@@ -153,6 +153,18 @@ export const CRITERIA = [
     evidence: "external",
     required: true,
   },
+  {
+    // External grader — Chromium-maintained HSTS preload list. Independent by
+    // construction, so it needs no `verifiedBy`. Recommended (non-gating).
+    id: "security.hsts-preload",
+    area: "security",
+    label: "HSTS preload",
+    standard: "RFC 6797 / hstspreload.org",
+    target: "Origin is on the HSTS preload list (HTTPS enforced before first byte).",
+    level: "preloaded",
+    evidence: "external",
+    required: false,
+  },
 
   // ── Performance — Core Web Vitals ────────────────────────────────────────
   {
@@ -336,6 +348,33 @@ export const CRITERIA = [
     required: false,
     tier: 3,
   },
+  // ── Integrity — external graders (independent by construction) ────────────
+  {
+    // OpenSSF Scorecard — automated third-party grader of repo security posture
+    // (0–10). Independent, so no `verifiedBy`. Recommended (non-gating).
+    id: "integrity.scorecard",
+    area: "integrity",
+    label: "OpenSSF Scorecard",
+    standard: "OpenSSF Scorecard",
+    target: "Repository scores ≥ 7.0 on the OpenSSF Scorecard.",
+    level: "score ≥ 7.0",
+    evidence: "external",
+    required: false,
+    tier: 3,
+  },
+  {
+    // SLSA build LEVEL achieved (distinct from `integrity.slsa-provenance`, which
+    // only checks provenance is present/signed/verified). Recommended (non-gating).
+    id: "integrity.slsa-level",
+    area: "integrity",
+    label: "SLSA build level",
+    standard: "SLSA",
+    target: "Build achieves the targeted SLSA build level (default L3).",
+    level: "≥ target (default L3)",
+    evidence: "external",
+    required: false,
+    tier: 3,
+  },
 
   // ══ COGNITIVE ACCESSIBILITY — W3C COGA ═════════════════════════════════════
   // HONEST LABELING: an INTERFACE-COMPLEXITY BUDGET (W3C COGA-derived), explicitly
@@ -465,6 +504,8 @@ const ENVELOPE = {
   // OSV). Decoupled from `asvs` so an objective vuln count can be supplied WITHOUT
   // also self-grading an ASVS level.
   vulns: opt(vObject({ knownCriticalOrHighVulns: req(vInt0) })),
+  // External grader — Chromium HSTS preload list. Independent; no `verifiedBy`.
+  hstsPreload: opt(vObject({ preloaded: req(vBool) })),
   coreWebVitals: opt(vArrayOf(vObject(CWV_SAMPLE_SHAPE))),
   baseline: opt(vObject({
     status: req(vEnum("widely", "newly", "limited")),
@@ -494,6 +535,10 @@ const ENVELOPE = {
   feeds: opt(vObject({ atomValid: req(vBool) })),
   // tier-3
   slsaProvenance: opt(vObject({ present: req(vBool), signed: req(vBool), verified: req(vBool) })),
+  // External grader — SLSA build LEVEL achieved (distinct from slsaProvenance).
+  slsaLevel: opt(vObject({ level: req(vEnum(0, 1, 2, 3)), target: def(vEnum(1, 2, 3), 3) })),
+  // External grader — OpenSSF Scorecard score (0–10). Independent; no `verifiedBy`.
+  scorecard: opt(vObject({ score: req(vNum(0, 10)) })),
   reproducibleBuild: opt(vObject({ reproducible: req(vBool) })),
   sbom: opt(vObject({ present: req(vBool), valid: req(vBool), complete: req(vBool), signed: req(vBool) })),
   contentDigests: opt(vObject({ reprDigestHeaders: req(vBool) })),

@@ -35,6 +35,9 @@ const met = (detail) => ({ status: "met", detail });
 const unmet = (detail) => ({ status: "unmet", detail });
 const notAssessed = (detail) => ({ status: "not-assessed", detail });
 
+/** The OpenSSF Scorecard score at/above which `integrity.scorecard` is `met`. */
+const SCORECARD_THRESHOLD = 7.0;
+
 // Per-criterion evaluator for external evidence. Returns `not-assessed` when the
 // relevant evidence field is absent; otherwise checks shape/thresholds.
 const EXTERNAL_EVALUATORS = {
@@ -92,6 +95,13 @@ const EXTERNAL_EVALUATORS = {
     return v.knownCriticalOrHighVulns === 0
       ? met("0 known critical/high vulns")
       : unmet(`${v.knownCriticalOrHighVulns} known critical/high vuln(s)`);
+  },
+  "security.hsts-preload": (e) => {
+    const v = e.hstsPreload;
+    if (!v) return notAssessed("no HSTS preload status supplied");
+    return v.preloaded
+      ? met("origin is on the HSTS preload list")
+      : unmet("origin is not on the HSTS preload list");
   },
   "performance.core-web-vitals": (e) => {
     const samples = e.coreWebVitals;
@@ -196,6 +206,20 @@ const EXTERNAL_EVALUATORS = {
     return gaps.length === 0
       ? met("SLSA/in-toto provenance present, signed, and verified")
       : unmet(gaps.join(", "));
+  },
+  "integrity.slsa-level": (e) => {
+    const v = e.slsaLevel;
+    if (!v) return notAssessed("no SLSA build level supplied");
+    return v.level >= v.target
+      ? met(`SLSA build Level ${v.level} (target L${v.target})`)
+      : unmet(`SLSA build Level ${v.level} below target L${v.target}`);
+  },
+  "integrity.scorecard": (e) => {
+    const v = e.scorecard;
+    if (!v) return notAssessed("no OpenSSF Scorecard result supplied");
+    return v.score >= SCORECARD_THRESHOLD
+      ? met(`OpenSSF Scorecard ${v.score.toFixed(1)} (≥ ${SCORECARD_THRESHOLD})`)
+      : unmet(`OpenSSF Scorecard ${v.score.toFixed(1)} below ${SCORECARD_THRESHOLD}`);
   },
   "integrity.reproducible-build": (e) => {
     const v = e.reproducibleBuild;
