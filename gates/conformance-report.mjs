@@ -77,20 +77,25 @@ const STATUS_LABEL = { met: "met", unmet: "unmet", "not-assessed": "not assessed
  * @param {object} [opts]
  * @param {(criterion:object)=>(string|undefined)} [opts.evidenceHref] Maps a
  *   criterion-result to the URL of its evidence; omit/return falsy → no link.
- * @param {number} [opts.headingLevel] Heading level for per-area titles (default 2).
+ * @param {number} [opts.headingLevel] Heading level for the `ck-conformance`
+ *   section title (default 2). Per-area titles render one level below it.
  * @param {string} [opts.idPrefix] Prefix for per-criterion element ids (default "ck").
  * @returns {string} HTML fragment
  */
 export function renderConformanceReport(report, opts = {}) {
   const { evidenceHref, headingLevel = 2, idPrefix = "ck" } = opts;
-  const h = Math.min(Math.max(headingLevel | 0, 2), 6);
+  // The `ck-conformance` section heading sits at `headingLevel`; per-area
+  // sub-sections nest one level below it (a valid document outline, and it gives
+  // the outer <section> the heading vnu's `--Werror` requires).
+  const hSection = Math.min(Math.max(headingLevel | 0, 2), 6);
+  const hArea = Math.min(hSection + 1, 6);
   const s = report.summary;
 
   const areaBlocks = report.areaSummaries.map((a) => {
     const inArea = report.results.filter((r) => r.area === a.area);
     const items = inArea.map((r) => renderCriterion(r, { evidenceHref, idPrefix })).join("\n");
     return `      <section class="ck-area" data-area="${esc(a.area)}">
-        <h${h} class="ck-area__title">${esc(a.area)} <span class="ck-area__count">${a.met}/${a.total} met</span></h${h}>
+        <h${hArea} class="ck-area__title">${esc(a.area)} <span class="ck-area__count">${a.met}/${a.total} met</span></h${hArea}>
         <p class="ck-area__summary">${esc(a.summary)}</p>
         <ul class="ck-criteria">
 ${items}
@@ -99,6 +104,7 @@ ${items}
   }).join("\n");
 
   return `<section class="ck-conformance" data-conformant="${report.conformant ? "true" : "false"}">
+      <h${hSection} class="ck-conformance__heading">Conformance</h${hSection}>
       <p class="ck-conformance__claim" data-conformant="${report.conformant ? "true" : "false"}">${esc(report.claim)}</p>
       <p class="ck-conformance__summary">${s.met}/${s.total} criteria met &middot; ${s.unmet} unmet &middot; ${s.notAssessed} not assessed &middot; <span class="ck-conformance__standard">${esc(report.standard)} v${esc(report.version)}</span></p>
       <div class="ck-conformance__areas">

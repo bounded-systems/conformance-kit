@@ -228,6 +228,12 @@ await test("gates/conformance-report: build + render the conformance projection"
     if (!html.includes(needle)) throw new Error(`renderer output missing ${needle}`);
   }
   if (/style=/.test(html)) throw new Error("renderer must not emit inline styles");
+  // The outer ck-conformance <section> carries a heading (vnu --Werror: a section
+  // must have one); per-area sub-sections nest one level below it.
+  if (!/<h2 class="ck-conformance__heading">Conformance<\/h2>/.test(html)) {
+    throw new Error("ck-conformance section must have an h2 heading");
+  }
+  if (!/<h3 class="ck-area__title">/.test(html)) throw new Error("per-area titles must nest one level below (h3)");
   ok("gates/conformance-report: build + render the conformance projection",
     `partial=${partial.summary.met}met/${partial.summary.unmet}unmet/${partial.summary.notAssessed}n-a · full claim=compact`);
 });
