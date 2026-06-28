@@ -1,0 +1,36 @@
+package.json
+  s_98e316d0b3248a::t_c84e44ba13c2f4 33
+  s_98e316d0b3248a::t_991639daf81888 21
+README.md
+  s_98e316d0b3248a::t_8d754f7574c997 113,119-124
+  s_98e316d0b3248a::t_43dd8af3628b44 15
+  s_98e316d0b3248a::t_11cf7d55f0494f 69
+gates/axe-gate.mjs
+  s_98e316d0b3248a::t_2d78724fc399c1 1-40,42-221,235-236,238-244,246-247,249-325
+  s_98e316d0b3248a::t_9eec859f21bb9c 41
+  s_98e316d0b3248a::t_9615a75663c937 222-234,237,245,248
+fixtures/axe/bad.html
+  s_98e316d0b3248a::t_a93bf6b5c8896e 1-17
+fixtures/axe/good.html
+  s_98e316d0b3248a::t_dea07564318d44 1-16
+test/run.mjs
+  s_98e316d0b3248a::t_e27ef9dd44f526 241-298
+package-lock.json
+  s_98e316d0b3248a::t_42fcd07ed82da4 14,22,898-906
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "b76a85ebf3fa32ad3c7521245e3d40ff95ac790e",
+  "prompts": {},
+  "sessions": {
+    "s_98e316d0b3248a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8db980ee-eb6b-4866-832b-f795cef7f33c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
