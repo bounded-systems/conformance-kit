@@ -31,7 +31,6 @@
       "files": [
         "integrity/verify-site.mjs               ← integrity/verify-site.mjs",
         "integrity/verify/verify.mjs             ← integrity/verify/verify.mjs",
-        "integrity/verify/package.json           ← integrity/verify/package.json",
         "integrity/gen-sitemanifest.mjs          ← integrity/scripts/gen-sitemanifest.mjs",
         "integrity/gen-provenance.mjs            ← integrity/scripts/gen-provenance.mjs",
         "integrity/structure-audit/audit.mjs     ← integrity/structure-audit/audit.mjs",

@@ -30,10 +30,11 @@ bundle. Exit code `0` on success, `1` on any verification failure.
 
 ## Provenance
 
-This package is the canonical Sigstore verifier maintained in
-[`bounded-systems/conformance-kit`](https://github.com/bounded-systems/conformance-kit)
-at `integrity/verify/`. It is published to JSR keyless via GitHub Actions OIDC — no
-long-lived tokens. See the kit README ("Publishing `@bounded-systems/verify`") for
-how a release is cut.
+This is a **vendored** copy of the Sigstore verifier, kept here so sites can pull it
+into a hermetic build. The **canonical, published** source of the
+[`@bounded-systems/verify`](https://jsr.io/@bounded-systems/verify) JSR package now
+lives in its own repo, [`bounded-systems/verify`](https://github.com/bounded-systems/verify)
+— that repo owns the package manifest and the keyless GitHub Actions OIDC release.
+The copy here is kept byte-for-byte in sync with it; cut releases there, not here.
 
 MIT
