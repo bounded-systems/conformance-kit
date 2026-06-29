@@ -12,7 +12,7 @@ hardcodes `robertdelanghe.dev`, `bounded.tools`, an account, or an email.
 
 ```
 integrity/    verify-site · verify (sigstore) · gen-sitemanifest · gen-provenance · structure-audit · http-probe
-gates/        sbom (gen + completeness) · shacl-runner · seo-gate · readability-gate · commonmark-runner · semantic (lone)
+gates/        sbom (gen + completeness) · shacl-runner · seo-gate · axe-gate (axe-core a11y) · readability-gate · commonmark-runner · semantic (lone)
 gates/conformance/  conformance-report — lone's conformance() projection (Node port of jsr:@bounded-systems/lone@0.4) + a generic HTML renderer
 generators/   gen-cid (IPFS UnixFS) · gen-identity (did:web + VC) · openapi (static-API helper core)
 emitters/     reprDigest (RFC 9530) · securityTxt (RFC 9116) · webManifest · markdown-sibling headers
@@ -66,6 +66,7 @@ in-process verifier). The Deno semantic runner pins its imports in
 | `sbom/check-sbom.mjs` | `ROOT=. DIST=dist node …/check-sbom.mjs` | Same `$ROOT`/`$DIST`. Fails closed unless pinned-set ⊆ SBOM ⊆ pinned-set and (optionally) the in-toto attestation reconciles. |
 | `shacl-runner.mjs` | `node …/shacl-runner.mjs <shapes.ttl> <htmlDir>` | **The SHACL shapes file stays in the site** (its structured-data contract) + the built-HTML dir. Optional `$SHACL_CONTEXT` (custom offline JSON-LD context; default schema.org). Fails unless every JSON-LD block `conforms: true`. |
 | `seo-gate.mjs` | `node …/seo-gate.mjs [distDir]` | `$DIST`. Optional `$SEO_ERROR_PAGE`, `$SEO_DEPLOY_SIDECARS`. Enforces canonical/title/description uniqueness + self-consistency, robots.txt (RFC 9309), sitemap, internal links. |
+| `axe-gate.mjs` | `node …/axe-gate.mjs [distDir]` | `$DIST`. Optional `$AXE_PAGES` (comma list, default: every `*.html` in dist), `$AXE_TAGS` (default `wcag2a,wcag2aa,wcag21a,wcag21aa,wcag22aa`), `$AXE_IMPACT_THRESHOLD` (`minor`/`moderate`/`serious`/`critical`, default `serious`), `$AXE_RUNNER` (`playwright` (CI, needs `playwright` + `@axe-core/playwright` + `npx playwright install chromium`) \| `tezcatl` (macOS WebKit, local)), `$AXE_REPORT` (write the JSON report). Serves dist over an ephemeral origin (so assets resolve), runs **axe-core** per page, and **fails closed** on any violation at/above the threshold. The emitted report's `axe: { serious, critical }` envelope is exactly what `conformance-report`'s `a11y.axe-serious-critical` criterion consumes — a clean run is what lets a site honestly assert it. |
 | `readability-gate.mjs` | `node …/readability-gate.mjs <corpus.json> [--strict]` | **The corpus is an input** the site assembles from its copy: a JSON array of `{id,text}` or an `{id:text}` map. Optional `$READABILITY_THRESHOLDS`, `$READABILITY_MIN_WORDS`, `$READABILITY_KNOWN_ACRONYMS`. WARN-only unless `--strict`. |
 | `commonmark-runner.mjs` | `node …/commonmark-runner.mjs <renderer.mjs> [fixtures.json]` | **The site's markdown renderer module** (export `renderMarkdown`, or set `$COMMONMARK_RENDER_EXPORT`). Default fixtures pin a safe CommonMark subset + 4 hostile-HTML escapes; a site with a different renderer supplies its own `fixtures.json`. |
 | `semantic/gate.ts` | `deno run --allow-read --allow-net …/gate.ts` | Built HTML in `$SEMANTIC_DIR` (default `dist/blog`); `$SEMANTIC_SELECTOR` (subject node, default `article`). Imports `jsr:@bounded-systems/lone`; any error-severity finding fails CI. |
@@ -109,14 +110,18 @@ deno run -A jsr:@bounded-systems/verify https://your-site
 ## Test
 
 ```
-npm install && npm test    # 11 cases against fixtures/, in isolation
+npm install && npm test    # 13 cases against fixtures/, in isolation
 ```
 
 The suite verifies the generic logic end-to-end: gen-sbom against a sample lockfile;
 shacl-runner against sample shapes+HTML → `conforms: true`; structure-audit / seo /
 readability / commonmark against sample inputs; gen-sitemanifest + gen-cid + verify-site
-round-trip on a sample build; gen-identity; and the emitter/openapi/schema helpers.
-(The Deno semantic runner is exercised by the consuming site, as it needs Deno + JSR.)
+round-trip on a sample build; gen-identity; the emitter/openapi/schema helpers; the
+conformance projection; and the **axe-gate** (its classification/threshold/report logic
+deterministically, plus a real end-to-end pass on the known-bad + known-good
+`fixtures/axe/` snippets when a browser engine — tezcatl or Playwright/Chromium — is on
+PATH; skipped, like the cosign step, when none is). (The Deno semantic runner is
+exercised by the consuming site, as it needs Deno + JSR.)
 
 ## Provenance / determinism
 
