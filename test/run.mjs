@@ -241,6 +241,25 @@ await test("gates/conformance-report: build + render the conformance projection"
   if (gradersBad["integrity.scorecard"] !== "unmet") throw new Error("Scorecard 6.9 must be unmet");
   if (gradersBad["integrity.slsa-level"] !== "unmet") throw new Error("SLSA L2 below target L3 must be unmet");
 
+  // (f) design-token accessibility (token-a11y suite) — recommended (tier-2):
+  // not-assessed absent → met all-true → unmet on any gap.
+  const designIds = ["design.palette-contrast", "design.typography", "design.target-size", "design.opacity-contrast", "design.token-likeness"];
+  for (const id of designIds) if (absent[id] !== "not-assessed") throw new Error(`${id} absent must be not-assessed`);
+  const designGood = statusById(buildConformanceReport({ evidence: {
+    palette: { cvdSafe: true, apcaBaseline: true, nonTextContrast: true },
+    typography: { bodyLineHeight: true, textSpacingAchievable: true, minFontSize: true, weightLegibility: true },
+    targetSize: { minSizeAA: true },
+    opacityContrast: { effectiveContrast: true },
+    tokenLikeness: { distinctCategoricals: true, noRedundantTokens: true },
+  } }));
+  for (const id of designIds) if (designGood[id] !== "met") throw new Error(`${id} all-true must be met`);
+  const designBad = statusById(buildConformanceReport({ evidence: {
+    palette: { cvdSafe: true, apcaBaseline: false, nonTextContrast: true },
+    targetSize: { minSizeAA: false },
+  } }));
+  if (designBad["design.palette-contrast"] !== "unmet") throw new Error("palette gap must be unmet");
+  if (designBad["design.target-size"] !== "unmet") throw new Error("target-size false must be unmet");
+
   // malformed envelope → throw (lone refuses to guess).
   let threw = false;
   try { buildConformanceReport({ evidence: { sbom: { present: "yes" } } }); } catch { threw = true; }

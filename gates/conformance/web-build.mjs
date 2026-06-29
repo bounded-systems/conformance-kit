@@ -132,6 +132,68 @@ export const CRITERIA = [
     required: false,
   },
 
+  // ── Design tokens — WCAG over the design system, at the source ────────────
+  // Proven over the token set BEFORE pages compose it (recommended, tier-2).
+  {
+    id: "design.palette-contrast",
+    area: "design",
+    label: "Palette contrast (design tokens)",
+    standard: "WCAG 2.2 + APCA",
+    target:
+      "Color-token pairings are CVD-safe, meet an APCA Lc baseline, and satisfy non-text contrast.",
+    level: "AA (token-level)",
+    evidence: "external",
+    required: false,
+    tier: 2,
+  },
+  {
+    id: "design.typography",
+    area: "design",
+    label: "Typography tokens",
+    standard: "WCAG 2.2",
+    target:
+      "Type tokens give body line-height ≥ 1.5, achievable text spacing (1.4.12), a minimum font size, and legible weights.",
+    level: "AA (token-level)",
+    evidence: "external",
+    required: false,
+    tier: 2,
+  },
+  {
+    id: "design.target-size",
+    area: "design",
+    label: "Target size (interactive tokens)",
+    standard: "WCAG 2.2",
+    target: "Interactive size tokens meet the SC 2.5.8 minimum target size (AA).",
+    level: "AA (token-level)",
+    evidence: "external",
+    required: false,
+    tier: 2,
+  },
+  {
+    id: "design.opacity-contrast",
+    area: "design",
+    label: "Effective contrast under opacity",
+    standard: "WCAG 2.2",
+    target:
+      "Token opacity composited over its backdrop still meets SC 1.4.3/1.4.11 contrast.",
+    level: "AA (token-level)",
+    evidence: "external",
+    required: false,
+    tier: 2,
+  },
+  {
+    id: "design.token-likeness",
+    area: "design",
+    label: "Token likeness hygiene",
+    standard: "Design-system hygiene",
+    target:
+      "Categorical tokens are perceptibly distinct and no near-duplicate (redundant) tokens collapse the system.",
+    level: "recommended",
+    evidence: "external",
+    required: false,
+    tier: 2,
+  },
+
   // ── Security — OWASP ASVS 5.0.0 ──────────────────────────────────────────
   {
     id: "security.asvs",
@@ -550,6 +612,24 @@ const ENVELOPE = {
     conducted: req(vBool),
     withCognitiveDisabilities: req(vBool),
     criticalTasksPassed: req(vBool),
+  })),
+  // design-token accessibility
+  palette: opt(vObject({
+    cvdSafe: req(vBool),
+    apcaBaseline: req(vBool),
+    nonTextContrast: req(vBool),
+  })),
+  typography: opt(vObject({
+    bodyLineHeight: req(vBool),
+    textSpacingAchievable: req(vBool),
+    minFontSize: req(vBool),
+    weightLegibility: req(vBool),
+  })),
+  targetSize: opt(vObject({ minSizeAA: req(vBool) })),
+  opacityContrast: opt(vObject({ effectiveContrast: req(vBool) })),
+  tokenLikeness: opt(vObject({
+    distinctCategoricals: req(vBool),
+    noRedundantTokens: req(vBool),
   })),
 };
 
