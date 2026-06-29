@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        version = "0.6.0";
+        version = "0.7.0";
 
         # Every ck-* bin the package.json declares (kept in sync with "bin").
         bins = [
