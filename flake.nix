@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        version = "0.2.0";
+        version = "0.3.0";
 
         # Every ck-* bin the package.json declares (kept in sync with "bin").
         bins = [
@@ -18,6 +18,7 @@
           "ck-vuln-gate"
           "ck-html-validator-gate"
           "ck-baseline-gate"
+          "ck-jargon-gate"
           "ck-seo-gate"
           "ck-shacl-runner"
           "ck-readability-gate"
@@ -38,7 +39,7 @@
           pname = "conformance-kit";
           inherit version;
           src = ./.;
-          npmDepsHash = "sha256-eqr1kqr3to34/tE5dYVMU6LPsp63XhnI+L4TGtd/Fyk=";
+          npmDepsHash = "sha256-cnzJA3NEG9ZkB2dZzIyXFJKjJmX8czariuTi7NjYg40=";
           dontNpmBuild = true; # the kit has no build step (pure .mjs)
 
           nativeBuildInputs = [ pkgs.makeWrapper ];
