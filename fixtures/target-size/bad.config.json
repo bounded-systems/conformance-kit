@@ -1,0 +1,7 @@
+{
+  "thresholds": { "minPx": 24, "aaaPx": 44 },
+  "targets": [
+    { "name": "tiny-close", "size": "18px" },
+    { "name": "checkbox", "width": "20px", "height": "20px" }
+  ]
+}

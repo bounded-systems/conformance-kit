@@ -1,0 +1,6 @@
+{
+  "tokens": "../opacity/tokens.css",
+  "typography": { "tokens": "../typography/bad.tokens.json", "body": ["body"] },
+  "targetSize": "../target-size/bad.config.json",
+  "opacity": "../opacity/bad.usages.json"
+}

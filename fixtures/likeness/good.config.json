@@ -1,0 +1,4 @@
+{
+  "thresholds": { "dupDeltaE": 2, "collapseDeltaE": 10, "dupSeverity": "warn" },
+  "categorical": [ { "name": "well-separated", "members": ["status-go", "accent"] } ]
+}

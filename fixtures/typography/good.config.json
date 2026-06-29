@@ -1,0 +1,4 @@
+{
+  "body": ["body"],
+  "thresholds": { "minBodyLineHeight": 1.5, "recBodyPx": 16, "minBodyPx": 12 }
+}

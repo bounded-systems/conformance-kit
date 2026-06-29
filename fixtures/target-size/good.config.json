@@ -1,0 +1,9 @@
+{
+  "thresholds": { "minPx": 24, "aaaPx": 44 },
+  "tokens": { "control-min": "44px", "icon-hit": "24px" },
+  "targets": [
+    { "name": "primary-button", "width": "{control-min}", "height": "{control-min}" },
+    { "name": "icon-button", "size": "{icon-hit}" },
+    { "name": "inline-link", "size": "16px", "exception": "inline", "reason": "inline text link, exempt per 2.5.8" }
+  ]
+}
