@@ -30,6 +30,7 @@
           "ck-shacl-runner"
           "ck-readability-gate"
           "ck-ai-readability-gate"
+          "ck-css-purity-gate"
           "ck-commonmark-runner"
           "ck-gen-sbom"
           "ck-check-sbom"

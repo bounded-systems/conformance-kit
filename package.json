@@ -32,6 +32,7 @@
     "ck-jargon-gate": "gates/jargon-gate.mjs",
     "ck-readability-gate": "gates/readability-gate.mjs",
     "ck-ai-readability-gate": "gates/ai-readability-gate.mjs",
+    "ck-css-purity-gate": "gates/css-purity-gate.mjs",
     "ck-commonmark-runner": "gates/commonmark-runner.mjs",
     "ck-gen-cid": "generators/gen-cid.mjs",
     "ck-gen-identity": "generators/gen-identity.mjs",
