@@ -1,0 +1,52 @@
+test/run.mjs
+  s_71a0aecf45d82c::t_e75d2805fb8ca8 441-471
+gates/jargon-gate.mjs
+  s_71a0aecf45d82c::t_ab46feaf9e2dc1 1-21,24-25,28-30,38-39,44,46-52,54-82,86,97-159
+  s_71a0aecf45d82c::t_c5dda0abbfa43c 40-43,45
+  s_71a0aecf45d82c::t_e592429ae52d8f 22-23,26-27
+  s_71a0aecf45d82c::t_2fc98cd56ce64c 31-37
+  s_71a0aecf45d82c::t_80b0df1f149d63 53
+  s_71a0aecf45d82c::t_32bb5c3d4c2362 83-85,87-96
+fixtures/jargon/good.html
+  s_71a0aecf45d82c::t_c403653aed4ba9 5-6,8,10
+  s_71a0aecf45d82c::t_414fcae4743707 1-4,7,9,11
+package.json
+  s_71a0aecf45d82c::t_4935c94bda4da4 3
+  s_71a0aecf45d82c::t_c7ee425c14028f 25
+  s_98e316d0b3248a::t_cc014cf3a97044 61
+fixtures/jargon/bad.html
+  s_71a0aecf45d82c::t_414fcae4743707 1-7
+flake.nix
+  s_71a0aecf45d82c::t_9cfe5022ee8ba8 21
+  s_71a0aecf45d82c::t_1a4e1d3de733d2 13
+  s_71a0aecf45d82c::t_f3e08224405d10 42
+README.md
+  s_71a0aecf45d82c::t_f6d15182aaf312 15
+  s_71a0aecf45d82c::t_9d56f154335c0d 80
+package-lock.json
+  s_71a0aecf45d82c::t_5ae2941274ab67 3,9,14,36,1118-1127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "0159e79adbe8b8dd254c47bd7a443c2220ac2cc0",
+  "prompts": {},
+  "sessions": {
+    "s_71a0aecf45d82c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6f6e806-c9db-459c-ba56-79aa27861998",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    },
+    "s_98e316d0b3248a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8db980ee-eb6b-4866-832b-f795cef7f33c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
