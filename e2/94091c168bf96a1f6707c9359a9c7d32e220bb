@@ -1,0 +1,21 @@
+package.json
+  s_71a0aecf45d82c::t_bd122dafc7ec99 3
+flake.nix
+  s_71a0aecf45d82c::t_0ee563ab7673dc 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "e294091c168bf96a1f6707c9359a9c7d32e220bb",
+  "prompts": {},
+  "sessions": {
+    "s_71a0aecf45d82c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6f6e806-c9db-459c-ba56-79aa27861998",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
