@@ -1,0 +1,28 @@
+test/run.mjs
+  s_71a0aecf45d82c::t_d875dd36c462b4 323-334,337-345,347-353
+  s_71a0aecf45d82c::t_d2edd8c1b1888d 335-336
+  s_71a0aecf45d82c::t_3f850c666b3d23 346
+gates/vuln-gate.mjs
+  s_71a0aecf45d82c::t_2f73d686e2ea93 1-101
+package.json
+  s_71a0aecf45d82c::t_0f9cf77cdb6493 22
+README.md
+  s_71a0aecf45d82c::t_81e5567fec1957 70
+  s_71a0aecf45d82c::t_4561c80f316b5c 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "8bd1f6ab79d843440b8cf38fcf272f8a23531aae",
+  "prompts": {},
+  "sessions": {
+    "s_71a0aecf45d82c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6f6e806-c9db-459c-ba56-79aa27861998",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
