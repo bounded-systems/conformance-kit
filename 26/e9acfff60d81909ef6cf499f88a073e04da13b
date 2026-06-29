@@ -1,0 +1,77 @@
+gates/token-a11y.mjs
+  s_98e316d0b3248a::t_54d328a47f4472 1-128
+gates/typography-gate.mjs
+  s_98e316d0b3248a::t_257f7056485c4a 1-396
+README.md
+  s_98e316d0b3248a::t_f052b6649d85ef 82-87
+  s_98e316d0b3248a::t_921881e2928512 16
+test/run.mjs
+  s_98e316d0b3248a::t_076ca469920246 482-596
+gates/likeness-gate.mjs
+  s_98e316d0b3248a::t_cef2374cdc33c1 1-174
+fixtures/typography/bad.tokens.json
+  s_98e316d0b3248a::t_eb270bd7bfd5fb 1-7,10-12
+  s_98e316d0b3248a::t_1b6ed6b8b1dfc2 8-9
+fixtures/typography/good.tokens.json
+  s_98e316d0b3248a::t_e323ebd313d61f 1-21
+fixtures/typography/good.config.json
+  s_98e316d0b3248a::t_cf6f381e6046ee 1-4
+gates/target-size-gate.mjs
+  s_98e316d0b3248a::t_918ff6054b6610 1-166
+gates/pairing-extractor.mjs
+  s_98e316d0b3248a::t_149c3ff5265031 1-207,209-226,229-267
+  s_98e316d0b3248a::t_f0a67e3f83ad04 227-228
+  s_98e316d0b3248a::t_a4f2eef3e327c2 208
+package.json
+  s_98e316d0b3248a::t_214d34d43ffcaa 26-31
+TOKEN-A11Y.md
+  s_98e316d0b3248a::t_dfcde8a339d68e 1-211
+gates/opacity-contrast-gate.mjs
+  s_98e316d0b3248a::t_24730141e94bc6 1-191
+flake.nix
+  s_98e316d0b3248a::t_d7a3e152ed702c 21-26
+fixtures/likeness/bad.config.json
+  s_98e316d0b3248a::t_1e5c1038d0d11e 1-4
+fixtures/likeness/good.config.json
+  s_98e316d0b3248a::t_b66cef0f2a990b 1-4
+fixtures/likeness/tokens.css
+  s_98e316d0b3248a::t_6c6646f1f6d07a 1-12
+fixtures/opacity/bad.usages.json
+  s_98e316d0b3248a::t_1b9ffd2c7044c9 1-8
+fixtures/opacity/good.usages.json
+  s_98e316d0b3248a::t_a9278f9bc797a1 1-8
+fixtures/opacity/tokens.css
+  s_98e316d0b3248a::t_458fb575fecbab 1-6
+fixtures/pairing/clean.styles.css
+  s_98e316d0b3248a::t_171a5de9f6d13e 1-4
+fixtures/pairing/styles.css
+  s_98e316d0b3248a::t_274b5676643304 1-7
+fixtures/pairing/tokens.css
+  s_98e316d0b3248a::t_25bd6a55687c53 1-7
+fixtures/target-size/bad.config.json
+  s_98e316d0b3248a::t_0667f8486e485e 1-7
+fixtures/target-size/good.config.json
+  s_98e316d0b3248a::t_66cf7838a22630 1-9
+fixtures/token-a11y/bad.json
+  s_98e316d0b3248a::t_3aa7517db4d453 1-6
+fixtures/token-a11y/good.json
+  s_98e316d0b3248a::t_3474e001008915 1-8
+fixtures/typography/bad.config.json
+  s_98e316d0b3248a::t_63d6e3dd068a99 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "26e9acfff60d81909ef6cf499f88a073e04da13b",
+  "prompts": {},
+  "sessions": {
+    "s_98e316d0b3248a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8db980ee-eb6b-4866-832b-f795cef7f33c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
