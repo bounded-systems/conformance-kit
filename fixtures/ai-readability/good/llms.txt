@@ -1,0 +1,9 @@
+# Example Site
+
+> A small site that is legible to LLM agents.
+
+## Pages
+
+- [Home](/index.html): the landing page
+- [About](/about.html): who we are
+- [Docs](/docs/): the documentation index

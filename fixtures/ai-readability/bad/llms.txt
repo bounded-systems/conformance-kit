@@ -1,0 +1,4 @@
+# Bad Site
+
+- [Home](/index.html): ok
+- [Ghost](/ghost.html): broken link

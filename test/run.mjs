@@ -657,6 +657,35 @@ await test("gates/token-a11y: unified runner across all members, e2e on fixtures
     `good=${good.summary.ran.length} members clean · bad=${bad.summary.failing.length} failing (fail-closed)`);
 });
 
+// N. ai-readability: pure link/sibling logic, then evidence over good + bad fixtures.
+await test("gates/ai-readability: links + siblings logic, evidence on fixtures", async () => {
+  const m = await import(join(KIT, "gates", "ai-readability-gate.mjs"));
+
+  // (a) pure core.
+  const links = m.extractMarkdownLinks("[Home](/index.html) and <https://x.test/> and [a](b.html 't')");
+  if (!links.includes("/index.html") || !links.includes("b.html") || !links.includes("https://x.test/"))
+    throw new Error("extractMarkdownLinks wrong: " + links.join(","));
+  if (m.classifyLink("/a") !== "internal" || m.classifyLink("https://x/") !== "external" || m.classifyLink("#h") !== "anchor")
+    throw new Error("classifyLink wrong");
+  if (!m.resolveCandidates("/docs/", "").includes("docs/index.html")) throw new Error("dir-index candidate missing");
+  if (!m.resolveCandidates("/about", "").includes("about.html")) throw new Error("extensionless .html candidate missing");
+  if (m.siblingFor("blog/x.html", ".md") !== "blog/x.md") throw new Error("siblingFor wrong");
+  if (!m.isPrivate("/admin/x", ["/admin"]) || m.isPrivate("/ok", ["/admin"])) throw new Error("isPrivate wrong");
+  if (!m.matchesAny("404.html", ["404"]) || m.matchesAny("index.html", ["404"])) throw new Error("matchesAny wrong");
+
+  // (b) evidence over fixtures — good passes all three, bad fails links + siblings.
+  const good = await m.evaluateAiReadability({ dist: join(FIX, "ai-readability", "good") });
+  if (!(good.aiReadability.llmsTxtPresent && good.aiReadability.linksResolve && good.aiReadability.markdownSiblings))
+    throw new Error("good fixture should be fully AI-readable: " + JSON.stringify(good.aiReadability));
+  const badr = await m.evaluateAiReadability({ dist: join(FIX, "ai-readability", "bad") });
+  if (!badr.aiReadability.llmsTxtPresent) throw new Error("bad fixture has llms.txt");
+  if (badr.aiReadability.linksResolve || badr.aiReadability.markdownSiblings) throw new Error("bad fixture must fail links + siblings");
+  if (!badr.details.brokenLinks.includes("/ghost.html")) throw new Error("bad fixture should flag the broken link");
+
+  ok("gates/ai-readability: links + siblings logic, evidence on fixtures",
+    `pure logic asserted · good=all-pass · bad: broken=${badr.details.brokenLinks.length}, missing-siblings=${badr.details.missingSiblings.length}`);
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
