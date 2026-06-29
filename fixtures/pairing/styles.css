@@ -1,0 +1,7 @@
+/* root surface + default text */
+:root { background: var(--paper); color: var(--ink); }
+/* a dark panel with its own text + border */
+.panel { background: var(--forest); border-color: var(--line); }
+.panel .label { color: var(--mint); }
+/* a button declares both fg and bg in one rule */
+.btn { color: var(--paper); background: var(--forest); }

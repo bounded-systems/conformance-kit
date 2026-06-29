@@ -542,6 +542,121 @@ await test("generators/gen-print-snapshots: paths + renderer, e2e via tezcatl", 
   }
 });
 
+// 20. typography-gate: pure parsing/eval against known values + good/bad fixtures.
+await test("gates/typography-gate: line-height/spacing/size/weight, e2e on fixtures", async () => {
+  const T = await import(join(KIT, "gates", "typography-gate.mjs"));
+  // (a) parsing primitives.
+  if (T.parseLineHeight("1.5", 16).ratio !== 1.5) throw new Error("unitless 1.5 → ratio 1.5");
+  if (T.parseLineHeight("24px", 16).ratio !== 1.5) throw new Error("24px @16 → ratio 1.5");
+  if (T.parseLineHeight("24px", 16).overridable !== false) throw new Error("px line-height not overridable");
+  if (T.parseSpacingEm("0.12em", 16).em !== 0.12) throw new Error("0.12em → 0.12");
+  if (T.parseSpacingEm("2px", 16).overridable !== false) throw new Error("px spacing not overridable");
+  // (b) per-style evaluation: a body 10px/lh1.2/weight100/1px-letter trips four SCs.
+  const badStyle = T.evaluateStyle("body", { fontSizePx: 10, lineHeight: T.parseLineHeight("1.2", 10), fontWeight: 100, letterSpacing: T.parseSpacingEm("1px", 10) }, true);
+  const scs = new Set(badStyle.findings.map((f) => f.sc));
+  for (const sc of ["1.4.12", "1.4.4", "1.4.8"]) if (!scs.has(sc)) throw new Error(`body must flag SC ${sc}`);
+  if (badStyle.passed) throw new Error("bad body style must not pass");
+  // (c) e2e on fixtures.
+  const good = await T.runTypographyGate({ tokens: join(FIX, "typography", "good.tokens.json"), config: join(FIX, "typography", "good.config.json") });
+  if (!good.passed) throw new Error(`good fixture must pass, got ${JSON.stringify(good.summary)}`);
+  const bad = await T.runTypographyGate({ tokens: join(FIX, "typography", "bad.tokens.json"), config: join(FIX, "typography", "bad.config.json") });
+  if (bad.passed || bad.summary.errors < 4) throw new Error(`bad fixture must fail with ≥4 errors, got ${JSON.stringify(bad.summary)}`);
+  ok("gates/typography-gate: line-height/spacing/size/weight, e2e on fixtures",
+    `parse asserted · e2e: good=clean, bad trips ${bad.summary.errors} error(s)`);
+});
+
+// 21. target-size-gate: 24px AA floor + AAA status + exceptions, e2e on fixtures.
+await test("gates/target-size-gate: 24px AA floor + AAA + exceptions, e2e on fixtures", async () => {
+  const T = await import(join(KIT, "gates", "target-size-gate.mjs"));
+  if (T.resolveDimension("44px") !== 44 || T.resolveDimension("{c}", { c: "24px" }) !== 24) throw new Error("dimension resolve");
+  const small = T.evaluateTarget({ name: "x", size: "20px" });
+  if (small.aa.pass || small.aaa.pass || small.passed) throw new Error("20px must fail AA");
+  const ok44 = T.evaluateTarget({ name: "y", size: "44px" });
+  if (!ok44.aa.pass || !ok44.aaa.pass) throw new Error("44px must pass AA+AAA");
+  const exempt = T.evaluateTarget({ name: "z", size: "16px", exception: "inline", reason: "inline link" });
+  if (!exempt.passed || exempt.exception !== "inline") throw new Error("inline-exempt target must pass");
+  const good = await T.runTargetSizeGate({ config: join(FIX, "target-size", "good.config.json") });
+  if (!good.passed) throw new Error("good targets must pass");
+  const bad = await T.runTargetSizeGate({ config: join(FIX, "target-size", "bad.config.json") });
+  if (bad.passed || bad.summary.belowAA < 2) throw new Error("bad targets must fail (≥2 below AA)");
+  // empty config → vacuous pass with a coverage note.
+  const none = await T.runTargetSizeGate({ config: { targets: [] } });
+  if (!none.passed || none.coverage !== "none") throw new Error("no targets → vacuous pass, coverage:none");
+  ok("gates/target-size-gate: 24px AA floor + AAA + exceptions, e2e on fixtures",
+    `2.5.8 floor asserted · e2e: good=clean, bad ${bad.summary.belowAA} below AA, empty=coverage-none`);
+});
+
+// 22. opacity-contrast-gate: source-over compositing + effective contrast, e2e.
+await test("gates/opacity-contrast-gate: composite + effective contrast, e2e on fixtures", async () => {
+  const O = await import(join(KIT, "gates", "opacity-contrast-gate.mjs"));
+  // (a) compositing: white over black at 0.5 → mid-grey #808080.
+  const mid = O.compositeOver([255, 255, 255], [0, 0, 0], 0.5);
+  if (Math.round(mid[0]) !== 128) throw new Error(`white/black @0.5 → 128, got ${mid[0]}`);
+  // (b) a full-strength clean pair stays clean; a faded one drops below AA.
+  const opaque = O.evaluateUsage({ fg: "#000", bg: "#fff", fgHex: "#000000", bgHex: "#ffffff", opacity: 1, kind: "text" });
+  if (!opaque.passed || opaque.effectiveRatio < 20) throw new Error("opaque black/white must pass ~21:1");
+  const faded = O.evaluateUsage({ fg: "#000", bg: "#fff", fgHex: "#000000", bgHex: "#ffffff", opacity: 0.25, kind: "text" });
+  if (faded.passed || faded.effectiveRatio >= 4.5) throw new Error("faded fg must drop below AA");
+  if (!(faded.drop > 0)) throw new Error("must report the contrast drop");
+  // (c) e2e on fixtures.
+  const good = await O.runOpacityContrastGate({ tokens: join(FIX, "opacity", "tokens.css"), usages: join(FIX, "opacity", "good.usages.json") });
+  if (!good.passed) throw new Error(`good usages must pass, got ${JSON.stringify(good.summary)}`);
+  const bad = await O.runOpacityContrastGate({ tokens: join(FIX, "opacity", "tokens.css"), usages: join(FIX, "opacity", "bad.usages.json") });
+  if (bad.passed || bad.summary.failing < 1) throw new Error("bad usages must fail");
+  ok("gates/opacity-contrast-gate: composite + effective contrast, e2e on fixtures",
+    `source-over asserted · e2e: good=clean, bad ${bad.summary.failing} failing (worst drop ${bad.summary.worstDrop}:1)`);
+});
+
+// 23. likeness-gate: near-duplicate ΔE + categorical CVD collapse, e2e on fixtures.
+await test("gates/likeness-gate: near-duplicate + confusable categoricals, e2e on fixtures", async () => {
+  const L = await import(join(KIT, "gates", "likeness-gate.mjs"));
+  // (a) near-duplicate scan: two near-identical inks collapse, distinct ones don't.
+  const dup = L.findNearDuplicates({ a: "#5C6B63", b: "#5E6B62", c: "#A6432F" });
+  if (dup.count !== 1 || dup.duplicates[0].a !== "a") throw new Error("must flag the one near-duplicate ink pair");
+  if (L.findNearDuplicates({ x: "#fff", y: "#fff" }).duplicates[0].identical !== true) throw new Error("identical pair flagged");
+  // (b) e2e: good passes (dup=warn), bad fails (categorical collapse under CVD + dup=error).
+  const good = await L.runLikenessGate({ tokens: join(FIX, "likeness", "tokens.css"), config: join(FIX, "likeness", "good.config.json") });
+  if (!good.passed || good.summary.nearDuplicates < 1) throw new Error(`good must pass yet surface near-dups, got ${JSON.stringify(good.summary)}`);
+  const bad = await L.runLikenessGate({ tokens: join(FIX, "likeness", "tokens.css"), config: join(FIX, "likeness", "bad.config.json") });
+  if (bad.passed || bad.summary.categoricalCollapses < 1) throw new Error("bad must fail with a categorical collapse");
+  ok("gates/likeness-gate: near-duplicate + confusable categoricals, e2e on fixtures",
+    `ΔE asserted · e2e: good=warn-only, bad trips ${bad.summary.categoricalCollapses} collapse + ${bad.summary.nearDuplicates} dup(s)`);
+});
+
+// 24. pairing-extractor: derive fg×bg from CSS usage + matrix, e2e on fixtures.
+await test("gates/pairing-extractor: derive pairings from CSS + matrix, e2e on fixtures", async () => {
+  const P = await import(join(KIT, "gates", "pairing-extractor.mjs"));
+  const map = { ink: "#16221C", paper: "#FFFFFF", forest: "#0C5A42", mint: "#9FDCC2" };
+  // (a) same-rule pairing + containment pairing.
+  const rules = P.parseRules(":root{background:var(--paper);color:var(--ink)} .panel{background:var(--forest)} .panel .label{color:var(--mint)}");
+  const { pairings } = P.extractPairings(rules, map);
+  const has = (fg, bg) => pairings.some((p) => p.fgHex.toLowerCase() === map[fg].toLowerCase() && p.bgHex.toLowerCase() === map[bg].toLowerCase());
+  if (!has("ink", "paper")) throw new Error("root surface pairing ink/paper missing");
+  if (!has("mint", "forest")) throw new Error("containment pairing mint/forest missing");
+  // (b) full run builds a matrix with WCAG + per-CVD numbers.
+  const rep = await P.runPairingExtractor({ tokens: join(FIX, "pairing", "tokens.css"), css: [join(FIX, "pairing", "styles.css")] });
+  if (rep.matrix.length < 3 || rep.matrix.some((m) => typeof m.wcag !== "number")) throw new Error("matrix must score every pair");
+  if (!P.renderMatrixMarkdown(rep.matrix).includes("| fg | bg |")) throw new Error("markdown matrix header missing");
+  // (c) declared ∪ extracted union.
+  const u = await P.runPairingExtractor({ tokens: map, css: [".x{color:var(--ink);background:var(--paper)}"], declared: { pairings: [{ fg: "mint", bg: "forest", kind: "text" }] } });
+  if (u.summary.declaredAdded < 1) throw new Error("declared pairing must union in");
+  ok("gates/pairing-extractor: derive pairings from CSS + matrix, e2e on fixtures",
+    `extract+containment asserted · ${rep.summary.total} pair(s) scored, declared∪extracted`);
+});
+
+// 25. token-a11y: unified runner aggregates all members, fail-closed.
+await test("gates/token-a11y: unified runner across all members, e2e on fixtures", async () => {
+  const { runTokenA11y } = await import(join(KIT, "gates", "token-a11y.mjs"));
+  const base = join(FIX, "token-a11y");
+  const good = await runTokenA11y(JSON.parse(await readFile(join(base, "good.json"), "utf8")), base);
+  if (!good.passed) throw new Error(`good suite must pass, failing: ${good.summary.failing}`);
+  if (good.summary.ran.length < 5) throw new Error("good suite must run ≥5 members");
+  const bad = await runTokenA11y(JSON.parse(await readFile(join(base, "bad.json"), "utf8")), base);
+  if (bad.passed || bad.summary.failing.length < 3) throw new Error("bad suite must fail ≥3 members");
+  ok("gates/token-a11y: unified runner across all members, e2e on fixtures",
+    `good=${good.summary.ran.length} members clean · bad=${bad.summary.failing.length} failing (fail-closed)`);
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

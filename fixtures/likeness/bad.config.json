@@ -1,0 +1,4 @@
+{
+  "thresholds": { "dupDeltaE": 2, "collapseDeltaE": 10, "dupSeverity": "error" },
+  "categorical": [ { "name": "chart-series", "members": ["chart-red", "chart-green"] } ]
+}

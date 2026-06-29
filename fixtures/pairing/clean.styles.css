@@ -1,0 +1,4 @@
+:root { background: var(--paper); color: var(--ink); }
+.panel { background: var(--forest); }
+.panel .label { color: var(--mint); }
+.btn { color: var(--paper); background: var(--forest); }

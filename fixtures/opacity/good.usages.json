@@ -1,0 +1,8 @@
+{
+  "thresholds": { "minRatioText": 4.5, "minRatioLarge": 3.0, "minRatioUi": 3.0 },
+  "opacityTokens": { "strong": 0.9 },
+  "usages": [
+    { "name": "ink-on-paper @0.9", "fg": "ink", "bg": "paper", "opacity": "{strong}", "kind": "text" },
+    { "name": "mint-on-forest opaque", "fg": "mint", "bg": "forest", "opacity": 1, "kind": "large-text" }
+  ]
+}

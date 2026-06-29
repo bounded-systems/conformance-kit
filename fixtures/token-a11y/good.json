@@ -1,0 +1,8 @@
+{
+  "tokens": "../opacity/tokens.css",
+  "typography": { "tokens": "../typography/good.tokens.json", "body": ["body"] },
+  "targetSize": "../target-size/good.config.json",
+  "opacity": "../opacity/good.usages.json",
+  "likeness": { "tokens": "../likeness/tokens.css", "thresholds": { "dupSeverity": "warn" }, "categorical": [ { "name": "ok", "members": ["status-go", "accent"] } ] },
+  "pairing": { "tokens": "../pairing/tokens.css", "css": ["../pairing/clean.styles.css"], "gate": true }
+}
