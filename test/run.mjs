@@ -659,8 +659,20 @@ await test("gates/pairing-extractor: derive pairings from CSS + matrix, e2e on f
   // (c) declared ∪ extracted union.
   const u = await P.runPairingExtractor({ tokens: map, css: [".x{color:var(--ink);background:var(--paper)}"], declared: { pairings: [{ fg: "mint", bg: "forest", kind: "text" }] } });
   if (u.summary.declaredAdded < 1) throw new Error("declared pairing must union in");
+  // (d) allowlist (closed-world): the declared set is the opt-in allowlist; an
+  // extracted pairing NOT in it is an `undeclared` violation; declared still pass.
+  const al = await P.runPairingExtractor({
+    tokens: map,
+    css: [".a{color:var(--ink);background:var(--paper)}.b{color:var(--mint);background:var(--forest)}"],
+    declared: { pairings: [{ fg: "ink", bg: "paper", kind: "text" }] },
+    allowlist: true,
+  });
+  if (al.mode !== "allowlist") throw new Error("allowlist mode not flagged");
+  if (al.summary.declared !== 1) throw new Error("exactly 1 declared expected");
+  if (al.summary.undeclared < 1) throw new Error("the undeclared mint/forest pairing must be flagged");
+  if (al.undeclared.some((p) => p.fg === "ink")) throw new Error("the declared pairing must not be undeclared");
   ok("gates/pairing-extractor: derive pairings from CSS + matrix, e2e on fixtures",
-    `extract+containment asserted · ${rep.summary.total} pair(s) scored, declared∪extracted`);
+    `extract+containment asserted · ${rep.summary.total} pair(s) scored · union + allowlist (${al.summary.undeclared} undeclared)`);
 });
 
 // 25. token-a11y: unified runner aggregates all members, fail-closed.
