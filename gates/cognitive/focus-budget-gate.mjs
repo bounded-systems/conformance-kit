@@ -181,7 +181,9 @@ function extractContent(html) {
   const allWords = sections.flatMap((s) => words(s.text));
   const prose = allWords.join(" ");
 
-  // Definitions: terms the page DEFINES via <abbr>, <dfn>, <dl><dt>
+  // Definitions: terms the page DEFINES via <abbr>, <dfn>, <dl><dt>, or <a href> (semantic links).
+  // Per the semantic-link convention: a jargon term wrapped in <a href> links to its canonical
+  // definition — the link IS the expansion. Linked terms are not penalized in jargon density.
   const definitions = new Set();
   for (const el of document.querySelectorAll("abbr")) {
     for (const w of tokenize(el.textContent || "")) definitions.add(w);
@@ -191,6 +193,11 @@ function extractContent(html) {
     for (const w of tokenize(el.textContent || "")) definitions.add(w);
   }
   for (const el of document.querySelectorAll("dl dt")) {
+    for (const w of tokenize(el.textContent || "")) definitions.add(w);
+  }
+  // Semantic-link convention: text inside <a href> counts as "expanded" — the link points to
+  // the canonical definition, so the term is not undefined jargon.
+  for (const el of document.querySelectorAll("a[href]")) {
     for (const w of tokenize(el.textContent || "")) definitions.add(w);
   }
 
