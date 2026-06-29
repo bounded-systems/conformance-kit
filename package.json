@@ -19,6 +19,7 @@
     "ck-shacl-runner": "./gates/shacl-runner.mjs",
     "ck-seo-gate": "./gates/seo-gate.mjs",
     "ck-axe-gate": "./gates/axe-gate.mjs",
+    "ck-vuln-gate": "./gates/vuln-gate.mjs",
     "ck-readability-gate": "./gates/readability-gate.mjs",
     "ck-commonmark-runner": "./gates/commonmark-runner.mjs",
     "ck-gen-cid": "./generators/gen-cid.mjs",
