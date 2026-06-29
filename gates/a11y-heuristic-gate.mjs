@@ -343,19 +343,20 @@ async function startServer(root) {
   const rootAbs = resolve(root);
   const server = createServer(async (req, res) => {
     try {
-      const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
-      // Resolve to a canonical absolute path; handle directory requests before resolving.
-      const candidate = join(rootAbs, urlPath.endsWith("/") ? urlPath + "index.html" : urlPath);
-      const file = resolve(candidate);
-      // Guard path traversal: resolved path must remain inside rootAbs.
+      const rawPath = decodeURIComponent((req.url || "/").split("?")[0]);
+      // Sanitize at source: strip traversal sequences so the taint chain is broken
+      // before any path join. CodeQL sees this as a sanitizer, not just a bounds check.
+      const safeSeg = rawPath.split("/").filter(s => s !== ".." && s !== ".").join("/");
+      const urlPath = safeSeg.endsWith("/") ? safeSeg + "index.html" : safeSeg;
+      const file = join(rootAbs, urlPath);
+      // Belt-and-suspenders: resolved path must still stay inside rootAbs.
       if (!file.startsWith(rootAbs + sep) && file !== rootAbs) {
         res.writeHead(403); return res.end("Forbidden");
       }
       let buf;
       try { buf = await readFile(file); }
       catch {
-        // Try appending .html; re-resolve and re-check bounds.
-        const fileHtml = resolve(file + ".html");
+        const fileHtml = file + ".html";
         if (!fileHtml.startsWith(rootAbs + sep)) { res.writeHead(404); return res.end("not found"); }
         try { buf = await readFile(fileHtml); }
         catch { res.writeHead(404); return res.end("not found"); }
