@@ -131,6 +131,29 @@ export const CRITERIA = [
     evidence: "external",
     required: false,
   },
+  {
+    // ── HONEST LABELING: AGENT/STATIC HEURISTIC — NOT AT-user testing ──────
+    // This criterion backs a MACHINE heuristic pass over the rendered DOM:
+    // ARIA landmarks, interactive element names, heading hierarchy, image alts,
+    // skip-navigation, positive-tabindex warnings, inline focus-ring removal,
+    // invalid ARIA roles, and (playwright runner) an accessibility tree snapshot
+    // + axe-core corroboration. A clean run raises the floor but DOES NOT
+    // substitute for manual WCAG 2.2 AA testing or real AT-user testing.
+    // a11y.wcag22-aa-manual stays not-assessed — this gate cannot clear it.
+    id: "a11y.agent-heuristic-review",
+    area: "accessibility",
+    label: "Agent heuristic accessibility review",
+    standard: "ARIA/WCAG (machine heuristic)",
+    target:
+      "Machine AT pass: ARIA landmarks, interactive names, heading hierarchy, image alts, " +
+      "skip-nav, tabindex sanity, inline focus-ring removal, invalid ARIA roles; " +
+      "[playwright runner] accessibility tree snapshot + axe corroboration. " +
+      "AGENT/STATIC HEURISTIC — NOT AT-user testing. a11y.wcag22-aa-manual stays not-assessed.",
+    level: "agent heuristic (recommended)",
+    evidence: "external",
+    required: false,
+    tier: 2,
+  },
 
   // ── Design tokens — WCAG over the design system, at the source ────────────
   // Proven over the token set BEFORE pages compose it (recommended, tier-2).
@@ -458,6 +481,33 @@ export const CRITERIA = [
     loneCodes: ["LONE_COGA_"],
   },
   {
+    // ── HONEST LABELING: AGENT/STATIC PROXY — NOT COGA usability testing ───
+    // COGA "Making Content Usable" Objective 5: "Help users focus."
+    // This criterion backs a gate that measures TWO proxies:
+    //   A) Content cognitive-density: Coleman-Liau reading grade, average sentence
+    //      length, jargon/acronym density, section word count without subheadings.
+    //   B) Interaction/attention DOM patterns: auto-opening dialogs, autoplay media,
+    //      meta-refresh time limits, inline focus-ring removal, animation without
+    //      prefers-reduced-motion guard, missing aria-current, competing CTAs.
+    // NOT a substitute for COGA usability testing with people who have ADHD or
+    // other cognitive/learning disabilities. cognitive.coga-usability-testing stays
+    // not-assessed. Objectives 1–4, 6–8 are staged as not-assessed placeholders.
+    id: "cognitive.focus-budget",
+    area: "cognitive",
+    label: "COGA Obj-5: Focus budget (attention proxy)",
+    standard: "W3C COGA Making Content Usable — Objective 5",
+    target:
+      "Content within reading-grade ≤ 10 (Coleman-Liau) + sentence ≤ 20 words + " +
+      "jargon ≤ 0.5/100 words + sections ≤ 200 words without subheadings; " +
+      "interaction patterns support sustained attention (no autoplay, no focus-stealing, " +
+      "prefers-reduced-motion gated, one clear primary action per region, aria-current set). " +
+      "AGENT/STATIC PROXY — NOT COGA usability testing with people with cognitive disabilities.",
+    level: "Obj-5 proxy (recommended)",
+    evidence: "external",
+    required: false,
+    tier: "cognitive",
+  },
+  {
     id: "cognitive.coga-usability-testing",
     area: "cognitive",
     label: "COGA usability testing",
@@ -607,7 +657,44 @@ const ENVELOPE = {
   signedReleaseManifest: opt(vObject({ present: req(vBool), signed: req(vBool) })),
   ipfsCid: opt(vObject({ cidRecorded: req(vBool) })),
   httpRfc9110: opt(vObject({ conforms: req(vBool) })),
-  // cognitive
+  // cognitive — agent/static heuristic accessibility review (tier-2; non-gating)
+  // Evidence type: "agent/static heuristic review — NOT AT-user testing"
+  agentHeuristic: opt(vObject({
+    // Static heuristic checks (always present)
+    landmarksPresent: req(vBool),
+    interactiveNamesClean: req(vBool),
+    headingHierarchyClean: req(vBool),
+    imagesAltClean: req(vBool),
+    focusRingClean: req(vBool),
+    errors: req(vInt0),
+    warnings: req(vInt0),
+    pages: req(vInt0),
+    // Optional playwright-runner fields
+    axeCorroboration: opt(vObject({ serious: req(vInt0), critical: req(vInt0) })),
+  })),
+  // COGA Obj-5 focus budget (cognitive tier; non-gating)
+  // Evidence type: "agent/static interface-complexity proxy for COGA Obj-5 — NOT COGA usability testing"
+  focusBudget: opt(vObject({
+    contentDensity: req(vObject({
+      grade: opt(vNum(0)),
+      avgSentenceLength: opt(vNum(0)),
+      jargonPer100: opt(vNum(0)),
+      thresholdsMet: req(vBool),
+      breaches: def(vArrayOf(vStr), []),
+    })),
+    interactionPatterns: req(vObject({
+      autoDialogOnLoad: req(vBool),
+      autoplayMedia: req(vBool),
+      timeLimits: req(vBool),
+      focusRingRemoved: req(vBool),
+      animationUnguarded: req(vBool),
+      ariaCurrent: req(vBool),
+      patternsMet: req(vBool),
+    })),
+    thresholdsMet: req(vBool),
+    status: req(vEnum("met", "not-yet-met")),
+  })),
+  // COGA usability testing (manual; stays not-assessed; separate from focus-budget)
   cogaUsability: opt(vObject({
     conducted: req(vBool),
     withCognitiveDisabilities: req(vBool),
