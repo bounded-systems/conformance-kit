@@ -1,12 +1,16 @@
 name: publish
 
-# Publishes @bounded-systems/conformance-kit to npm with build provenance, on a
-# `v*` tag push (the deliberate release trigger — merging to main never publishes).
-# Uses npm Trusted Publishing (OIDC): no stored NPM_TOKEN. The package's trusted
-# publisher must be configured once on npmjs.com (repo + this workflow); until then
-# the publish step fails closed.
+# Publishes @bounded-systems/conformance-kit to npm with build provenance, via npm
+# Trusted Publishing (OIDC) — no stored NPM_TOKEN, no 2FA.
+#
+# Release flow: bump the version on `main`, fast-forward `main` into the `publish`
+# branch, and push — CI publishes whatever version is in package.json. (A `v*` tag
+# push, or a manual dispatch, releases too.) The publish step is IDEMPOTENT: if that
+# version is already on npm it is SKIPPED, so re-pushing `publish` without a version
+# bump is a clean no-op, never a red build.
 on:
   push:
+    branches: [publish]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -27,5 +31,18 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Test gate (must pass before publish)
         run: npm test
-      - name: Publish to npm (provenance, public)
+      - name: Is this version already on npm? (idempotency)
+        id: published
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$name@$version is already published — skipping (no-op)."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$name@$version is new — publishing."
+          fi
+      - name: Publish to npm (provenance, OIDC)
+        if: steps.published.outputs.skip == 'false'
         run: npm publish --provenance --access public
