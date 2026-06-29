@@ -70,6 +70,8 @@ fixtures/token-a11y/good.json
   s_98e316d0b3248a::t_3474e001008915 1-8
 fixtures/typography/bad.config.json
   s_98e316d0b3248a::t_63d6e3dd068a99 1-4
+package.json
+  s_98e316d0b3248a::t_c54103cb03bd94 26-31
 ---
 {
   "schema_version": "authorship/3.0.0",
