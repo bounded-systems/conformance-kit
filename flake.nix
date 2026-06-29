@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        version = "0.3.0";
+        version = "0.4.0";
 
         # Every ck-* bin the package.json declares (kept in sync with "bin").
         bins = [
@@ -18,6 +18,7 @@
           "ck-vuln-gate"
           "ck-html-validator-gate"
           "ck-baseline-gate"
+          "ck-palette-gate"
           "ck-jargon-gate"
           "ck-seo-gate"
           "ck-shacl-runner"
