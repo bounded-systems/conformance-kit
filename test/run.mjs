@@ -479,6 +479,37 @@ await test("gates/palette-gate: colour-science + CVD/APCA/non-text, e2e on fixtu
     `refs asserted (WCAG/APCA/CIEDE2000/CVD) · e2e: good=clean, bad trips WCAG+CVD+APCA+non-text+${bad.summary.categoricalCollapses} collapse(s)`);
 });
 
+// 18. jargon-gate: pure tokenize/detect/evaluate, then a deterministic e2e on fixtures.
+await test("gates/jargon-gate: tokenize + detect + evaluate, e2e on fixtures", async () => {
+  const { tokenize, candidateJargon, evaluateJargon, extractProseAndDefinitions, runJargonGate } =
+    await import(join(KIT, "gates", "jargon-gate.mjs"));
+
+  // (a) pure tokenize + dictionary-based candidate detection.
+  if (tokenize("The frobnicator runs.").join(",") !== "the,frobnicator,runs") throw new Error("tokenize wrong");
+  const cands = candidateJargon("the secure frobnicator reads provenance", { minLength: 3 });
+  if (!cands.has("frobnicator")) throw new Error("must flag the non-dictionary word");
+  if (cands.has("secure") || cands.has("provenance")) throw new Error("must not flag common dictionary words");
+
+  // (b) pure evaluation against defined terms + the plain-language envelope.
+  const undef = evaluateJargon({ candidates: new Set(["frobnicator", "ocap"]), definitions: new Set(["ocap"]), threshold: 0 });
+  if (undef.passed || undef.count !== 1 || undef.undefinedJargon[0] !== "frobnicator") throw new Error("must report the one undefined term");
+  if (undef.plainLanguage.undefinedJargon !== 1 || undef.plainLanguage.glossaryPresent !== true) throw new Error("plainLanguage envelope wrong");
+  if (!evaluateJargon({ candidates: new Set(["ocap"]), definitions: new Set(["ocap"]) }).passed) throw new Error("a fully-defined set must pass");
+
+  // (c) definitions extraction strips chrome and reads <abbr>/<dfn>/<dl> + boundary spaces.
+  const { text, definitions } = extractProseAndDefinitions(await readFile(join(FIX, "jargon", "good.html"), "utf8"));
+  if (!definitions.has("ocap") || !definitions.has("frobnicator")) throw new Error("must collect abbr/dt definitions");
+  if (/frobnicatorthe/.test(text)) throw new Error("adjacent blocks must not merge into a fake token");
+
+  // (d) deterministic e2e over the fixtures (pure npm — runs in CI).
+  const good = await runJargonGate({ dist: join(FIX, "jargon"), pages: ["good.html"] });
+  if (good.count !== 0) throw new Error(`good fixture must have 0 undefined jargon, got ${good.count}: ${good.undefinedJargon}`);
+  const bad = await runJargonGate({ dist: join(FIX, "jargon"), pages: ["bad.html"] });
+  if (bad.count < 3 || !bad.undefinedJargon.includes("widgetizer")) throw new Error(`bad fixture must flag fabricated jargon, got ${bad.undefinedJargon}`);
+  ok("gates/jargon-gate: tokenize + detect + evaluate, e2e on fixtures",
+    `pure logic asserted · e2e: good=0 undefined, bad=${bad.count} (${bad.undefinedJargon.slice(0, 3).join(", ")}…)`);
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
