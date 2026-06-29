@@ -1,0 +1,31 @@
+flake.nix
+  s_71a0aecf45d82c::t_5213913ae52fae 13
+  s_71a0aecf45d82c::t_67a948ddb69d12 21
+package.json
+  s_71a0aecf45d82c::t_b5dc331b780b6f 3
+  s_399e6065f1b4a3::t_1fb8dc49348b69 12-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "e35bc7a809cd72d611f0257b38670f0892d33f4e",
+  "prompts": {},
+  "sessions": {
+    "s_399e6065f1b4a3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a796dc6-3857-431d-90c5-9799f8d4865b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    },
+    "s_71a0aecf45d82c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6f6e806-c9db-459c-ba56-79aa27861998",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
