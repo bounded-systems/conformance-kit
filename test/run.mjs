@@ -217,6 +217,30 @@ await test("gates/conformance-report: build + render the conformance projection"
   if (byIdV["security.no-critical-vulns"].status !== "unmet") throw new Error("3 vulns must be unmet, no asvs object required");
   if (byIdV["security.asvs"].status !== "not-assessed") throw new Error("absent asvs must be not-assessed");
 
+  // (e) external graders (Scorecard / HSTS / SLSA level) — independent third-party
+  // grades, assessable on their own, recommended (non-gating).
+  const statusById = (r) => Object.fromEntries(r.results.map((x) => [x.id, x.status]));
+  const absent = statusById(buildConformanceReport({ evidence: {} }));
+  for (const id of ["security.hsts-preload", "integrity.scorecard", "integrity.slsa-level"]) {
+    if (absent[id] !== "not-assessed") throw new Error(`${id} absent must be not-assessed`);
+  }
+  const graders = statusById(buildConformanceReport({
+    evidence: {
+      hstsPreload: { preloaded: true },
+      scorecard: { score: 7.0 },
+      slsaLevel: { level: 3 }, // target defaults to L3
+    },
+  }));
+  if (graders["security.hsts-preload"] !== "met") throw new Error("preloaded HSTS must be met");
+  if (graders["integrity.scorecard"] !== "met") throw new Error("Scorecard 7.0 must be met");
+  if (graders["integrity.slsa-level"] !== "met") throw new Error("SLSA L3 (target L3) must be met");
+  const gradersBad = statusById(buildConformanceReport({
+    evidence: { hstsPreload: { preloaded: false }, scorecard: { score: 6.9 }, slsaLevel: { level: 2 } },
+  }));
+  if (gradersBad["security.hsts-preload"] !== "unmet") throw new Error("non-preloaded HSTS must be unmet");
+  if (gradersBad["integrity.scorecard"] !== "unmet") throw new Error("Scorecard 6.9 must be unmet");
+  if (gradersBad["integrity.slsa-level"] !== "unmet") throw new Error("SLSA L2 below target L3 must be unmet");
+
   // malformed envelope → throw (lone refuses to guess).
   let threw = false;
   try { buildConformanceReport({ evidence: { sbom: { present: "yes" } } }); } catch { threw = true; }
