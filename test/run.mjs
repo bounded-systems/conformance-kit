@@ -413,6 +413,31 @@ await test("gates/baseline-gate: classify + threshold, e2e on fixtures", async (
     `pure logic asserted · e2e (stylelint): good=widely, bad=${bad.status} (${bad.offenders.length} below-widely)`);
 });
 
+// 17. gen-snapshots: reader extraction → Markdown (pure, deterministic — runs in CI).
+await test("generators/gen-snapshots: reader extraction + markdown", async () => {
+  const { extractReader, toMarkdown } = await import(join(KIT, "generators", "gen-snapshots.mjs"));
+  const html = await readFile(join(FIX, "snapshots", "article.html"), "utf8");
+
+  const reader = extractReader(html, { url: "https://fixture.example/the-bet" });
+  if (!reader) throw new Error("article fixture must extract a reader view");
+  if (!/The Bet/.test(reader.title)) throw new Error(`title not extracted (got ${reader.title})`);
+  if (/About<\/a>|<footer/i.test(reader.contentHtml)) throw new Error("reader content must strip nav/footer chrome");
+  if (!/clear edges/.test(reader.text)) throw new Error("reader text must carry the article body");
+
+  const md = toMarkdown(reader);
+  if (!/^---\n/.test(md)) throw new Error("markdown must lead with YAML front-matter");
+  if (!/source: https:\/\/fixture\.example\/the-bet/.test(md)) throw new Error("front-matter must record the source url");
+  if (!/## Why it matters/.test(md)) throw new Error("markdown must carry headings (## Why it matters)");
+  if (!/-\s+one checkpoint per capability/.test(md)) throw new Error("markdown must carry list items");
+  if (/<nav>|<footer>/.test(md)) throw new Error("markdown must not contain page chrome");
+
+  // a contentless page extracts to null, which the generator skips gracefully.
+  if (extractReader("<!DOCTYPE html><html><head><title>x</title></head><body></body></html>") !== null) {
+    throw new Error("a contentless page should yield no reader view (null)");
+  }
+  ok("generators/gen-snapshots: reader extraction + markdown", `title + front-matter + ${md.split("\n").length}-line markdown`);
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

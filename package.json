@@ -25,7 +25,8 @@
     "ck-readability-gate": "./gates/readability-gate.mjs",
     "ck-commonmark-runner": "./gates/commonmark-runner.mjs",
     "ck-gen-cid": "./generators/gen-cid.mjs",
-    "ck-gen-identity": "./generators/gen-identity.mjs"
+    "ck-gen-identity": "./generators/gen-identity.mjs",
+    "ck-gen-snapshots": "./generators/gen-snapshots.mjs"
   },
   "scripts": {
     "test": "node test/run.mjs"
@@ -41,6 +42,7 @@
     "sigstore": "^5.0.0",
     "stylelint": "^17.14.0",
     "stylelint-plugin-use-baseline": "^1.4.4",
+    "turndown": "^7.2.4",
     "vnu-jar": "^26.6.24"
   }
 }
