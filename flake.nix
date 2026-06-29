@@ -29,6 +29,7 @@
           "ck-seo-gate"
           "ck-shacl-runner"
           "ck-readability-gate"
+          "ck-ai-readability-gate"
           "ck-commonmark-runner"
           "ck-gen-sbom"
           "ck-check-sbom"
