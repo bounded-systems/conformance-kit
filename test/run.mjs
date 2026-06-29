@@ -438,6 +438,47 @@ await test("generators/gen-snapshots: reader extraction + markdown", async () =>
   ok("generators/gen-snapshots: reader extraction + markdown", `title + front-matter + ${md.split("\n").length}-line markdown`);
 });
 
+// 19. palette-gate: pure colour-science primitives validated against PUBLISHED
+//     reference values, then a deterministic e2e on the good/bad token fixtures.
+await test("gates/palette-gate: colour-science + CVD/APCA/non-text, e2e on fixtures", async () => {
+  const P = await import(join(KIT, "gates", "palette-gate.mjs"));
+
+  // (a) WCAG-2 contrast against canonical values.
+  if (P.wcagContrast(P.parseHex("#000"), P.parseHex("#fff")).toFixed(2) !== "21.00") throw new Error("black/white must be 21:1");
+  if (P.wcagContrast(P.parseHex("#777"), P.parseHex("#fff")).toFixed(2) !== "4.48") throw new Error("#777/#fff must be 4.48:1");
+
+  // (b) APCA-W3 (~0.1.9) against the algorithm's published reference outputs.
+  if (P.apcaContrast(P.parseHex("#000"), P.parseHex("#fff")).toFixed(2) !== "106.04") throw new Error("APCA black-on-white must be Lc 106.04");
+  if (P.apcaContrast(P.parseHex("#fff"), P.parseHex("#000")).toFixed(2) !== "-107.88") throw new Error("APCA white-on-black must be Lc -107.88");
+  if (P.apcaContrast(P.parseHex("#888"), P.parseHex("#fff")).toFixed(2) !== "63.06") throw new Error("APCA #888-on-white must be Lc 63.06");
+
+  // (c) CIEDE2000 against a Sharma et al. (2005) reference pair, and identity = 0.
+  if (P.ciede2000([50, 2.6772, -79.7751], [50, 0, -82.7485]).toFixed(4) !== "2.0425") throw new Error("CIEDE2000 reference pair must be 2.0425");
+  if (P.ciede2000(P.rgbToLab(P.parseHex("#0C5A42")), P.rgbToLab(P.parseHex("#0C5A42"))) !== 0) throw new Error("a colour vs itself must be ΔE 0");
+
+  // (d) CVD simulation collapses the classic red/green confusion (ΔE 75→7 under deuteranopia).
+  const red = P.parseHex("#d00"), grn = P.parseHex("#0a0");
+  const dNorm = P.ciede2000(P.rgbToLab(red), P.rgbToLab(grn));
+  const dDeut = P.ciede2000(P.rgbToLab(P.simulateCVD(red, "deuteranopia")), P.rgbToLab(P.simulateCVD(grn, "deuteranopia")));
+  if (!(dNorm > 60 && dDeut < 15)) throw new Error(`red/green must collapse under deuteranopia (got ${dNorm.toFixed(0)}→${dDeut.toFixed(0)})`);
+
+  // (e) pure per-pair evaluation: a marginal red passes WCAG for normal vision but fails for a protanope.
+  const danger = P.evaluatePair({ fg: "#e53935", bg: "#000000", fgHex: "#e53935", bgHex: "#000000", kind: "text" });
+  if (!danger.checks.wcagAA) throw new Error("#e53935/#000 must clear AA for normal vision");
+  if (danger.cvd.protanopia.pass || danger.cvd.pass) throw new Error("#e53935/#000 must fail CVD-safe contrast under protanopia");
+  if (danger.passed) throw new Error("a CVD-unsafe pair must not pass overall");
+
+  // (f) deterministic e2e over the good/bad token fixtures (pure node — runs in CI).
+  const good = await P.runPaletteGate({ tokens: join(FIX, "palette", "good.tokens.css"), pairings: join(FIX, "palette", "good.pairings.json") });
+  if (!good.passed) throw new Error(`good fixture must pass, got summary ${JSON.stringify(good.summary)}`);
+  const bad = await P.runPaletteGate({ tokens: join(FIX, "palette", "bad.tokens.css"), pairings: join(FIX, "palette", "bad.pairings.json") });
+  if (bad.passed) throw new Error("bad fixture must fail");
+  if (bad.summary.wcagFailures < 1 || bad.summary.cvdFailures < 1 || bad.summary.apcaFailures < 1 || bad.summary.nonTextFailures < 1 || bad.summary.categoricalCollapses < 1)
+    throw new Error(`bad fixture must trip every check, got ${JSON.stringify(bad.summary)}`);
+  ok("gates/palette-gate: colour-science + CVD/APCA/non-text, e2e on fixtures",
+    `refs asserted (WCAG/APCA/CIEDE2000/CVD) · e2e: good=clean, bad trips WCAG+CVD+APCA+non-text+${bad.summary.categoricalCollapses} collapse(s)`);
+});
+
 // 18. jargon-gate: pure tokenize/detect/evaluate, then a deterministic e2e on fixtures.
 await test("gates/jargon-gate: tokenize + detect + evaluate, e2e on fixtures", async () => {
   const { tokenize, candidateJargon, evaluateJargon, extractProseAndDefinitions, runJargonGate } =

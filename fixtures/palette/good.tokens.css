@@ -1,0 +1,12 @@
+/* A known-GOOD palette: every declared pair clears WCAG AA, APCA baseline, and
+   non-text contrast under normal vision AND under all three CVD simulations, and
+   the categorical colours stay distinguishable post-transform. */
+:root {
+  --paper: #ffffff;
+  --ink: #1a1a1a;       /* 17.4:1 on paper, APCA |Lc| ~104 */
+  --link: #0b5394;      /* 7.84:1 on paper, APCA |Lc| ~87 */
+  --border: #767676;    /* 4.54:1 on paper — clears non-text 3:1 under every CVD */
+  --cat-blue: #1565c0;  /* categorical series — blue / orange / grey */
+  --cat-orange: #e65100;/* distinguishable under deuteranopia + protanopia */
+  --cat-grey: #5c5c5c;
+}

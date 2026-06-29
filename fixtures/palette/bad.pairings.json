@@ -1,0 +1,9 @@
+{
+  "$comment": "Declared fg/bg pairs for the BAD fixture — each trips a different check (see bad.tokens.css).",
+  "pairings": [
+    { "name": "fine print", "fg": "faint", "bg": "paper", "kind": "text", "size": 14, "weight": 400 },
+    { "name": "danger label on dark", "fg": "danger", "bg": "ink-bg", "kind": "text", "size": 16, "weight": 400 },
+    { "name": "card border", "fg": "thinborder", "bg": "paper", "kind": "ui" }
+  ],
+  "categorical": ["cat-red", "cat-green", "cat-orange"]
+}
