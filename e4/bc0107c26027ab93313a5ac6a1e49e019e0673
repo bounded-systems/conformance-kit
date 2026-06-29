@@ -1,0 +1,30 @@
+package.json
+  s_71a0aecf45d82c::t_aec7fffa3cde94 35
+.release/css-purity-gate.md
+  s_71a0aecf45d82c::t_957c458c6defec 1-4
+gates/css-purity-gate.mjs
+  s_71a0aecf45d82c::t_1fd3aab0a45643 1-80,85-86,88-140
+  s_71a0aecf45d82c::t_824027c815e898 81-84,87
+README.md
+  s_71a0aecf45d82c::t_26fc9355c42fdb 91
+flake.nix
+  s_71a0aecf45d82c::t_01fe63fb0f356b 33
+test/run.mjs
+  s_71a0aecf45d82c::t_b6d79f5c8e4e69 728-748
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "e4bc0107c26027ab93313a5ac6a1e49e019e0673",
+  "prompts": {},
+  "sessions": {
+    "s_71a0aecf45d82c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6f6e806-c9db-459c-ba56-79aa27861998",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
