@@ -348,7 +348,7 @@ async function startServer(root) {
       const candidate = join(rootAbs, urlPath.endsWith("/") ? urlPath + "index.html" : urlPath);
       const file = resolve(candidate);
       // Guard path traversal: resolved path must remain inside rootAbs.
-      if (!file.startsWith(rootAbs + sep) && file !== rootAbs) {
+      if (!file.startsWith(rootAbs + sep)) {
         res.writeHead(403); return res.end("Forbidden");
       }
       let buf;
