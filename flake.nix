@@ -34,6 +34,7 @@
           "ck-gen-cid"
           "ck-gen-identity"
           "ck-gen-snapshots"
+          "ck-gen-print-snapshots"
         ];
 
         kit = pkgs.buildNpmPackage {

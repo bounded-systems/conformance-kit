@@ -28,7 +28,8 @@
     "ck-commonmark-runner": "gates/commonmark-runner.mjs",
     "ck-gen-cid": "generators/gen-cid.mjs",
     "ck-gen-identity": "generators/gen-identity.mjs",
-    "ck-gen-snapshots": "generators/gen-snapshots.mjs"
+    "ck-gen-snapshots": "generators/gen-snapshots.mjs",
+    "ck-gen-print-snapshots": "generators/gen-print-snapshots.mjs"
   },
   "scripts": {
     "test": "node test/run.mjs"

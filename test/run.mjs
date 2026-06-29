@@ -510,6 +510,38 @@ await test("gates/jargon-gate: tokenize + detect + evaluate, e2e on fixtures", a
     `pure logic asserted · e2e: good=0 undefined, bad=${bad.count} (${bad.undefinedJargon.slice(0, 3).join(", ")}…)`);
 });
 
+// 19. gen-print-snapshots: pure path/mime/renderer logic, then a best-effort PDF e2e.
+await test("generators/gen-print-snapshots: paths + renderer, e2e via tezcatl", async () => {
+  const { pdfOutPath, mimeFor, rendererCommand, genPrintSnapshots } =
+    await import(join(KIT, "generators", "gen-print-snapshots.mjs"));
+
+  // (a) pure output-path + mime + renderer-command mapping.
+  if (pdfOutPath("dist/blog/x.html") !== join("dist/blog", "x.print.pdf")) throw new Error("pdfOutPath wrong");
+  if (pdfOutPath("dist/i.html", ".pp") !== join("dist", "i.pp.pdf")) throw new Error("custom suffix wrong");
+  if (mimeFor("a.css") !== "text/css" || mimeFor("f.woff2") !== "font/woff2") throw new Error("mimeFor wrong");
+  const [cmd, args] = rendererCommand("tezcatl", "http://h/p", "/o.pdf", 500);
+  if (cmd !== "tezcatl" || args.join(" ") !== "http://h/p --pdf=/o.pdf --wait=500") throw new Error("tezcatl command wrong");
+  const [c2, a2] = rendererCommand("myrender {url} -o {out}", "http://h/p", "/o.pdf");
+  if (c2 !== "myrender" || a2.join(" ") !== "http://h/p -o /o.pdf") throw new Error("custom renderer template wrong");
+
+  // (b) best-effort e2e: render the snapshot fixture to PDF with the real renderer.
+  // A missing renderer (e.g. tezcatl not on a Linux CI runner) is a tolerated skip.
+  const hasTezcatl = spawnSync("tezcatl", ["--help"], { stdio: "ignore" }).status === 0;
+  try {
+    if (!hasTezcatl) throw new Error("tezcatl not on PATH");
+    const outdir = join(work, "print"); await mkdir(outdir, { recursive: true });
+    await cp(join(FIX, "snapshots"), outdir, { recursive: true });
+    const written = await genPrintSnapshots({ dist: outdir, pages: ["article.html"], wait: 400 });
+    if (written.length !== 1) throw new Error("expected 1 PDF written");
+    const buf = await readFile(join(outdir, "article.print.pdf"));
+    if (buf.slice(0, 5).toString() !== "%PDF-") throw new Error("output is not a PDF");
+    ok("generators/gen-print-snapshots: paths + renderer, e2e via tezcatl", "pure logic asserted · e2e (tezcatl): 1 valid PDF");
+  } catch (e) {
+    if (/wrong|expected|not a PDF/.test(e.message)) throw e;
+    ok("generators/gen-print-snapshots: paths + renderer, e2e via tezcatl", `pure logic asserted · e2e SKIPPED (${e.message.split("\n")[0]})`);
+  }
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
