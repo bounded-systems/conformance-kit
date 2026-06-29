@@ -22,7 +22,7 @@
 // npm-publishable (with its own Sigstore provenance) — the same core a browser
 // extension or CI policy would consume.
 import { readFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
+import { createHash, X509Certificate } from "node:crypto";
 import { join } from "node:path";
 import { verify as sigstoreVerify } from "sigstore";
 
@@ -77,8 +77,13 @@ if (provenance?.builtAt) {
 
 // 1: cryptographic bundle verification, in-process, offline
 try {
-  const signer = await sigstoreVerify(bundle, manifest, { certificateIssuer: ISSUER });
-  const san = signer?.identity?.subjectAlternativeName || "";
+  // sigstore-js verify() throws on any crypto failure (signature / Fulcio chain / Rekor
+  // inclusion) and returns nothing — so the identity SAN is read from the bundle's leaf cert.
+  await sigstoreVerify(bundle, manifest, { certificateIssuer: ISSUER });
+  const certB64 = bundle.verificationMaterial?.certificate?.rawBytes
+    || bundle.verificationMaterial?.x509CertificateChain?.certificates?.[0]?.rawBytes;
+  if (!certB64) throw new Error("no signing certificate in bundle");
+  const san = (new X509Certificate(Buffer.from(certB64, "base64")).subjectAltName || "").replace(/^URI:/, "");
   if (!new RegExp(identityRe).test(san)) throw new Error(`cert identity ${san} !~ ${identityRe}`);
   log(true, `bundle verified — signature + Fulcio cert + Rekor inclusion (offline), identity ${san}`);
 } catch (e) {
