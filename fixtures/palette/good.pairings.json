@@ -1,0 +1,9 @@
+{
+  "$comment": "Declared fg/bg pairs that co-occur in the GOOD fixture UI. kind ∈ text|large-text|ui. fg/bg are token names (resolved from good.tokens.css) or literal #hex.",
+  "pairings": [
+    { "name": "body text", "fg": "ink", "bg": "paper", "kind": "text", "size": 18, "weight": 400 },
+    { "name": "link", "fg": "link", "bg": "paper", "kind": "text", "size": 18, "weight": 400 },
+    { "name": "input border", "fg": "border", "bg": "paper", "kind": "ui" }
+  ],
+  "categorical": ["cat-blue", "cat-orange", "cat-grey"]
+}

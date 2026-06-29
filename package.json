@@ -22,6 +22,7 @@
     "ck-vuln-gate": "./gates/vuln-gate.mjs",
     "ck-html-validator-gate": "./gates/html-validator-gate.mjs",
     "ck-baseline-gate": "./gates/baseline-gate.mjs",
+    "ck-palette-gate": "./gates/palette-gate.mjs",
     "ck-readability-gate": "./gates/readability-gate.mjs",
     "ck-commonmark-runner": "./gates/commonmark-runner.mjs",
     "ck-gen-cid": "./generators/gen-cid.mjs",
