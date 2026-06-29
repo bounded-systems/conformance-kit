@@ -1,0 +1,28 @@
+flake.nix
+  s_71a0aecf45d82c::t_a35f369327ecf8 13
+gates/conformance/conformance.mjs
+  s_71a0aecf45d82c::t_6f5c0484b621fc 82-128
+gates/conformance/web-build.mjs
+  s_71a0aecf45d82c::t_3125583d5cc4a5 135-196
+  s_71a0aecf45d82c::t_df78c6e26c0d29 616-633
+test/run.mjs
+  s_71a0aecf45d82c::t_a281b1aa8ba0c4 244-262
+package.json
+  s_71a0aecf45d82c::t_16fb493359d92e 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "746913222e5995d93e4f54a0d82a2d1c973c4327",
+  "prompts": {},
+  "sessions": {
+    "s_71a0aecf45d82c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6f6e806-c9db-459c-ba56-79aa27861998",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
