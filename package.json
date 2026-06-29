@@ -52,8 +52,7 @@
     "./lib/*": "./lib/*"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
