@@ -359,11 +359,14 @@ const EXTERNAL_EVALUATORS = {
     if (gaps.length === 0) {
       return met(`focus budget met — all content density thresholds and interaction patterns clean. ${proxyNote}`);
     }
-    return {
-      status: "not-yet-met",
-      detail: `${gaps.join(", ")}. ${proxyNote} ` +
+    // `not-yet-met` is semantically distinct from `unmet` — it signals that
+    // thresholds are exceeded and CAN be fixed, but editorial decisions remain
+    // the maintainer's call. The conformance model maps it to "unmet" for counting;
+    // the detail string preserves the honest framing.
+    return unmet(
+      `not-yet-met: ${gaps.join(", ")}. ${proxyNote} ` +
         "Do NOT mass-rewrite content — editorial is the maintainer's call; gate reports honestly.",
-    };
+    );
   },
   "cognitive.coga-usability-testing": (e) => {
     const v = e.cogaUsability;

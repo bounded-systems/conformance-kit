@@ -692,7 +692,9 @@ const ENVELOPE = {
       patternsMet: req(vBool),
     })),
     thresholdsMet: req(vBool),
-    status: req(vEnum("met", "not-yet-met")),
+    // "not-yet-met" = thresholds exceeded, can be reduced with editorial work.
+    // Maps to "unmet" in the conformance model's count; detail string preserves framing.
+    status: req(vEnum("met", "not-yet-met", "unmet")),
   })),
   // COGA usability testing (manual; stays not-assessed; separate from focus-budget)
   cogaUsability: opt(vObject({
