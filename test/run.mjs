@@ -241,6 +241,25 @@ await test("gates/conformance-report: build + render the conformance projection"
   if (gradersBad["integrity.scorecard"] !== "unmet") throw new Error("Scorecard 6.9 must be unmet");
   if (gradersBad["integrity.slsa-level"] !== "unmet") throw new Error("SLSA L2 below target L3 must be unmet");
 
+  // (f) design-token accessibility (token-a11y suite) — recommended (tier-2):
+  // not-assessed absent → met all-true → unmet on any gap.
+  const designIds = ["design.palette-contrast", "design.typography", "design.target-size", "design.opacity-contrast", "design.token-likeness"];
+  for (const id of designIds) if (absent[id] !== "not-assessed") throw new Error(`${id} absent must be not-assessed`);
+  const designGood = statusById(buildConformanceReport({ evidence: {
+    palette: { cvdSafe: true, apcaBaseline: true, nonTextContrast: true },
+    typography: { bodyLineHeight: true, textSpacingAchievable: true, minFontSize: true, weightLegibility: true },
+    targetSize: { minSizeAA: true },
+    opacityContrast: { effectiveContrast: true },
+    tokenLikeness: { distinctCategoricals: true, noRedundantTokens: true },
+  } }));
+  for (const id of designIds) if (designGood[id] !== "met") throw new Error(`${id} all-true must be met`);
+  const designBad = statusById(buildConformanceReport({ evidence: {
+    palette: { cvdSafe: true, apcaBaseline: false, nonTextContrast: true },
+    targetSize: { minSizeAA: false },
+  } }));
+  if (designBad["design.palette-contrast"] !== "unmet") throw new Error("palette gap must be unmet");
+  if (designBad["design.target-size"] !== "unmet") throw new Error("target-size false must be unmet");
+
   // malformed envelope → throw (lone refuses to guess).
   let threw = false;
   try { buildConformanceReport({ evidence: { sbom: { present: "yes" } } }); } catch { threw = true; }
@@ -614,6 +633,14 @@ await test("gates/likeness-gate: near-duplicate + confusable categoricals, e2e o
   const dup = L.findNearDuplicates({ a: "#5C6B63", b: "#5E6B62", c: "#A6432F" });
   if (dup.count !== 1 || dup.duplicates[0].a !== "a") throw new Error("must flag the one near-duplicate ink pair");
   if (L.findNearDuplicates({ x: "#fff", y: "#fff" }).duplicates[0].identical !== true) throw new Error("identical pair flagged");
+  // identical-value pairs are intentional ALIASES — they don't count as redundancy,
+  // only near-but-DISTINCT pairs do (one alias + one near-dup → noRedundantTokens false,
+  // redundantTokens 1; drop the near-dup → noRedundantTokens true).
+  const alias = await L.runLikenessGate({ tokens: { card: "#ffffff", white: "#ffffff", inkA: "#5c6b63", inkB: "#5e6b62" } });
+  if (alias.summary.identicalPairs !== 1 || alias.summary.redundantTokens !== 1) throw new Error(`expected 1 alias + 1 redundant, got ${JSON.stringify(alias.summary)}`);
+  if (alias.likeness.noRedundantTokens !== false) throw new Error("a near-but-distinct pair must keep noRedundantTokens false");
+  const aliasOnly = await L.runLikenessGate({ tokens: { card: "#ffffff", white: "#ffffff", forest: "#0c5a42" } });
+  if (aliasOnly.likeness.noRedundantTokens !== true) throw new Error("identical aliases alone must NOT block noRedundantTokens");
   // (b) e2e: good passes (dup=warn), bad fails (categorical collapse under CVD + dup=error).
   const good = await L.runLikenessGate({ tokens: join(FIX, "likeness", "tokens.css"), config: join(FIX, "likeness", "good.config.json") });
   if (!good.passed || good.summary.nearDuplicates < 1) throw new Error(`good must pass yet surface near-dups, got ${JSON.stringify(good.summary)}`);
@@ -640,8 +667,20 @@ await test("gates/pairing-extractor: derive pairings from CSS + matrix, e2e on f
   // (c) declared ∪ extracted union.
   const u = await P.runPairingExtractor({ tokens: map, css: [".x{color:var(--ink);background:var(--paper)}"], declared: { pairings: [{ fg: "mint", bg: "forest", kind: "text" }] } });
   if (u.summary.declaredAdded < 1) throw new Error("declared pairing must union in");
+  // (d) allowlist (closed-world): the declared set is the opt-in allowlist; an
+  // extracted pairing NOT in it is an `undeclared` violation; declared still pass.
+  const al = await P.runPairingExtractor({
+    tokens: map,
+    css: [".a{color:var(--ink);background:var(--paper)}.b{color:var(--mint);background:var(--forest)}"],
+    declared: { pairings: [{ fg: "ink", bg: "paper", kind: "text" }] },
+    allowlist: true,
+  });
+  if (al.mode !== "allowlist") throw new Error("allowlist mode not flagged");
+  if (al.summary.declared !== 1) throw new Error("exactly 1 declared expected");
+  if (al.summary.undeclared < 1) throw new Error("the undeclared mint/forest pairing must be flagged");
+  if (al.undeclared.some((p) => p.fg === "ink")) throw new Error("the declared pairing must not be undeclared");
   ok("gates/pairing-extractor: derive pairings from CSS + matrix, e2e on fixtures",
-    `extract+containment asserted · ${rep.summary.total} pair(s) scored, declared∪extracted`);
+    `extract+containment asserted · ${rep.summary.total} pair(s) scored · union + allowlist (${al.summary.undeclared} undeclared)`);
 });
 
 // 25. token-a11y: unified runner aggregates all members, fail-closed.

@@ -99,8 +99,16 @@ export function evaluateLikeness({ tokenMap = {}, groups = [], thresholds = DEFA
   });
   const collapseCount = categorical.reduce((n, c) => n + c.count, 0);
 
+  // Identical-value pairs (ΔE 0) are intentional ALIASES — two semantic tokens
+  // deliberately mapped to one value (e.g. `card`/`white` → one #FFFFFF). The single
+  // value is defined once; the alias is by design, NOT redundancy. Only NEAR-but-
+  // DISTINCT pairs (0 < ΔE < dupDeltaE) are real redundancy: two almost-the-same
+  // colours defined separately, which probably should be one.
+  const aliasPairs = near.duplicates.filter((d) => d.identical).length;
+  const redundantTokens = near.count - aliasPairs;
+
   const dupIsError = t.dupSeverity === "error";
-  const errors = (dupIsError ? near.count : 0) + collapseCount;
+  const errors = (dupIsError ? redundantTokens : 0) + collapseCount;
 
   return {
     passed: errors === 0,
@@ -108,7 +116,8 @@ export function evaluateLikeness({ tokenMap = {}, groups = [], thresholds = DEFA
     summary: {
       tokens: Object.keys(tokenMap).length,
       nearDuplicates: near.count,
-      identicalPairs: near.duplicates.filter((d) => d.identical).length,
+      identicalPairs: aliasPairs,
+      redundantTokens,
       categoricalGroups: categorical.length,
       categoricalCollapses: collapseCount,
     },
@@ -117,7 +126,8 @@ export function evaluateLikeness({ tokenMap = {}, groups = [], thresholds = DEFA
     // Envelope a future lone `likeness.*` criterion can consume.
     likeness: {
       distinctCategoricals: collapseCount === 0,
-      noRedundantTokens: near.count === 0,
+      // Intentional identical-value aliases don't count — only near-but-distinct dups.
+      noRedundantTokens: redundantTokens === 0,
     },
   };
 }
@@ -156,8 +166,8 @@ async function main() {
   if (process.env.LIKENESS_REPORT) await writeFile(resolve(process.env.LIKENESS_REPORT), JSON.stringify(report, null, 2) + "\n");
 
   const s = report.summary;
-  const line = `likeness-gate: ${s.tokens} token(s) — ${s.nearDuplicates} near-duplicate(s) (${s.identicalPairs} identical), ${s.categoricalCollapses} categorical collapse(s)`;
-  const dupLine = (d) => `  · ${d.identical ? "identical" : "near-dup"}: ${d.a} ≈ ${d.b} (${d.aHex}/${d.bHex}) ΔE ${d.deltaE}`;
+  const line = `likeness-gate: ${s.tokens} token(s) — ${s.redundantTokens} redundant near-dup(s) + ${s.identicalPairs} intentional alias(es), ${s.categoricalCollapses} categorical collapse(s)`;
+  const dupLine = (d) => `  · ${d.identical ? "alias (identical, ok)" : "near-dup"}: ${d.a} ≈ ${d.b} (${d.aHex}/${d.bHex}) ΔE ${d.deltaE}`;
   const colLine = (c) => `  · collapse: ${c.a} vs ${c.b} (${c.aHex}/${c.bHex}) under ${c.condition} — ΔE ${c.deltaE} < ${c.min}`;
   if (!report.passed) {
     console.error(`✗ ${line}`);

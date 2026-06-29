@@ -1,6 +1,6 @@
 {
   "name": "@bounded-systems/conformance-kit",
-  "version": "0.5.0",
+  "version": "0.8.0",
   "description": "Standalone, site-agnostic web-conformance toolkit: integrity tooling + build gates + provenance generators, all parameterized so a site vendors one kit instead of duplicating scripts.",
   "type": "module",
   "license": "MIT",

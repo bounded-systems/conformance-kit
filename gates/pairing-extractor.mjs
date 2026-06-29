@@ -37,6 +37,9 @@
 //
 // INPUTS / ENV:
 //   $PAIRING_DECLARED   optional pairings.json to UNION in (declared ∪ extracted).
+//   --allowlist | $PAIRING_ALLOWLIST=1   CLOSED-WORLD: `declared` is the opt-in
+//                       allowlist — every extracted pairing must be declared (else an
+//                       `undeclared` violation) and every declared pairing must pass.
 //   $PAIRING_MATRIX     write the Markdown matrix here (else stdout).
 //   $PAIRING_REPORT     write the full JSON report here.
 //   $PAIRING_GATE       "1" → also run the palette gate over the union and exit 1 on
@@ -197,12 +200,67 @@ export function renderMatrixMarkdown(matrix) {
 // 4. Full run
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Load tokens + stylesheets → extract ∪ declared → matrix + palette evaluation. */
-export async function runPairingExtractor({ tokens, css = [], declared = null, defaultBackground = null }) {
+/** Resolve a declared spec's pairings to {fg,bg,fgHex,bgHex,kind,name,key}. */
+function resolveDeclared(map, spec) {
+  const out = [];
+  for (const d of spec.pairings || []) {
+    try {
+      const fgHex = resolveColor(map, d.fg), bgHex = resolveColor(map, d.bg), kind = d.kind || "text";
+      const key = `${toHex(parseHex(fgHex)).toLowerCase()}|${toHex(parseHex(bgHex)).toLowerCase()}|${kind}`;
+      out.push({ fg: d.fg, bg: d.bg, fgHex, bgHex, kind, name: d.name, key, source: "declared", confidence: "declared" });
+    } catch { /* unresolvable token → skip */ }
+  }
+  return out;
+}
+const pairKey = (p) => `${toHex(parseHex(p.fgHex)).toLowerCase()}|${toHex(parseHex(p.bgHex)).toLowerCase()}|${p.kind}`;
+
+/**
+ * Load tokens + stylesheets → extract ∪ declared → matrix + palette evaluation.
+ *
+ * `allowlist:true` switches to CLOSED-WORLD: the `declared` set is the opt-in
+ * allowlist and the gate enforces BOTH directions —
+ *   1. every DECLARED pairing must pass contrast, and
+ *   2. every pairing the CSS actually produces must be DECLARED; any extracted
+ *      pairing absent from the allowlist is an `undeclared` violation.
+ * The palette envelope is evaluated over the declared (vetted) set, so surface
+ * mis-extractions can't poison it — they surface as `undeclared` to either
+ * declare (and pass) or fix in the CSS.
+ */
+export async function runPairingExtractor({ tokens, css = [], declared = null, defaultBackground = null, allowlist = false }) {
   const map = typeof tokens === "string" ? await loadTokens(tokens) : tokens;
   const cssTexts = await Promise.all((Array.isArray(css) ? css : [css]).map((c) => (c.includes("{") ? c : readFile(c, "utf8"))));
   const rules = cssTexts.flatMap((t) => parseRules(t));
   const ext = extractPairings(rules, map, { defaultBackground });
+
+  if (allowlist) {
+    const spec = declared
+      ? (typeof declared === "string" ? JSON.parse(await readFile(declared, "utf8")) : declared)
+      : { pairings: [] };
+    const declaredPairs = resolveDeclared(map, spec);
+    const allowed = new Set(declaredPairs.map((p) => p.key));
+    const undeclared = ext.pairings.filter((p) => !allowed.has(pairKey(p)));
+    const matrix = buildMatrix(declaredPairs);
+    const palette = evaluatePalette({ pairings: declaredPairs.map((p) => ({ ...p })) });
+    const failingDeclared = matrix.filter((m) => !m.passed);
+    return {
+      passed: palette.passed && undeclared.length === 0,
+      mode: "allowlist",
+      summary: {
+        declared: declaredPairs.length,
+        extracted: ext.pairings.length,
+        undeclared: undeclared.length,
+        failingDeclared: failingDeclared.length,
+        surfaces: ext.surfaces.length,
+        total: declaredPairs.length,
+        failing: failingDeclared.length + undeclared.length,
+      },
+      undeclared,
+      defaultSurface: ext.defaultSurface,
+      pairings: declaredPairs,
+      matrix,
+      palette,
+    };
+  }
 
   // Union declared pairings (resolved) in.
   const extractedCount = ext.pairings.length;
@@ -245,7 +303,8 @@ async function main() {
     console.error("✗ pairing-extractor: usage: pairing-extractor.mjs <tokens.(json|css)> <style1.css> [style2.css …]");
     process.exit(2);
   }
-  const report = await runPairingExtractor({ tokens, css, declared: process.env.PAIRING_DECLARED || null });
+  const allowlist = process.argv.includes("--allowlist") || process.env.PAIRING_ALLOWLIST === "1";
+  const report = await runPairingExtractor({ tokens, css, declared: process.env.PAIRING_DECLARED || null, allowlist });
   if (process.env.PAIRING_REPORT) await writeFile(resolve(process.env.PAIRING_REPORT), JSON.stringify(report, null, 2) + "\n");
 
   const md = renderMatrixMarkdown(report.matrix);
@@ -253,6 +312,18 @@ async function main() {
   else console.log(md);
 
   const s = report.summary;
+  if (allowlist) {
+    // Closed-world: fail on undeclared OR failing declared pairings.
+    const line = `pairing-extractor [allowlist]: ${s.declared} declared, ${s.undeclared} undeclared, ${s.failingDeclared} failing declared`;
+    if (!report.passed) {
+      console.error(`✗ ${line}`);
+      for (const u of report.undeclared) console.error(`  · UNDECLARED: ${u.fg}/${u.bg} [${u.kind}] — declare it or fix the CSS`);
+      for (const m of report.matrix) if (!m.passed) console.error(`  · FAILS: ${m.fg}/${m.bg} [${m.kind}] WCAG ${m.wcag}:1`);
+      process.exit(1);
+    }
+    console.error(`✓ ${line}`);
+    return;
+  }
   const line = `pairing-extractor: ${s.total} pair(s) (${s.extracted} extracted + ${s.declaredAdded} declared) — ${s.failing} failing`;
   if (process.env.PAIRING_GATE === "1" && !report.passed) {
     console.error(`✗ ${line}`);

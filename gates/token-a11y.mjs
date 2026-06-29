@@ -17,7 +17,11 @@
 // CONFIG (every member is OPTIONAL — only declared members run):
 //   { "tokens": "brand/tokens/tokens.css",          // default token map (path or map)
 //     "palette":   { "pairings":[…], "categorical":[…], "thresholds":{…} } | "pairings.json",
-//     "pairing":   { "css":["a.css","b.css"], "declared":"pairings.json", "gate":true },
+//     "pairing":   { "css":["a.css","b.css"], "declared":"pairings.json", "gate":true,
+//                    "allowlist":true },  // closed-world: `declared` is the opt-in
+//                    // allowlist; any pairing the CSS produces that ISN'T declared is a
+//                    // violation, and declared pairings must pass. Palette envelope is
+//                    // evaluated over the vetted declared set (no surface false-positives).
 //     "typography":{ "tokens":"…", "body":["body"], "thresholds":{…} } | "typo.json",
 //     "targetSize":{ "targets":[…], "thresholds":{…} } | "targets.json",
 //     "opacity":   { "usages":[…], "opacityTokens":{…} } | "usages.json",
@@ -60,9 +64,11 @@ export async function runTokenA11y(config, base = ".") {
       const r = await runPairingExtractor({
         tokens: tokens(m), css: (m.css || []).map((c) => rel(base, c)),
         declared: m.declared ? rel(base, m.declared) : null,
+        allowlist: m.allowlist || false,
       });
-      // Report-only unless `gate:true`.
-      return m.gate ? r : { ...r, passed: true, gated: false };
+      // Allowlist (closed-world) gates by default — undeclared pairings are
+      // violations. Extraction-only mode is report-only unless `gate:true`.
+      return (m.allowlist || m.gate) ? r : { ...r, passed: true, gated: false };
     });
   }
   if (config.typography) {
@@ -97,7 +103,9 @@ function memberLine(name, m) {
   const s = m.summary || {};
   const tail =
     name === "palette" ? `${s.pairs} pair(s), ${s.failingPairs} failing, ${s.categoricalCollapses} collapse(s)`
-    : name === "pairing" ? `${s.total} pair(s), ${s.failing} failing${m.gated === false ? " (report-only)" : ""}`
+    : name === "pairing" ? (m.mode === "allowlist"
+        ? `${s.declared} declared, ${s.undeclared} undeclared, ${s.failingDeclared} failing`
+        : `${s.total} pair(s), ${s.failing} failing${m.gated === false ? " (report-only)" : ""}`)
     : name === "typography" ? `${s.styles} style(s), ${s.errors} error(s), ${s.warnings} warn(s)`
     : name === "targetSize" ? `${s.targets} target(s), ${s.belowAA} below AA${m.coverage === "none" ? " (none declared)" : ""}`
     : name === "opacity" ? `${s.usages} usage(s), ${s.failing} failing`
