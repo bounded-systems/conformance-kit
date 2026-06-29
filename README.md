@@ -26,7 +26,7 @@ clock); fail-closed (`exit 1`) on any violation.
 
 ## Install / vendor
 
-Two consumption models:
+Three consumption models:
 
 1. **Vendor (recommended, matches the existing `vendor/integrity/` pattern).** Copy
    the kit at a pinned commit into `vendor/conformance-kit/`, write a hash-pin
@@ -38,6 +38,13 @@ Two consumption models:
    tool was generalized from.
 2. **npm dep.** `npm i @bounded-systems/conformance-kit` and use the `ck-*` bins
    (see `package.json`) or `import` the library modules.
+3. **Nix flake (reproducible, runtime-bundled).** `nix run
+   github:bounded-systems/conformance-kit#ck-axe-gate -- dist`, or add the flake to
+   a `home-manager` / `nix profile`. Each `ck-*` bin is a hermetic, pinned closure;
+   the gates that shell out get their runtime bundled in — `ck-html-validator-gate`
+   carries a JRE for vnu, `ck-vuln-gate` carries npm — so no JRE/Node on `$PATH` is
+   needed. (`ck-axe-gate` still needs a browser the consumer supplies via
+   `$AXE_RUNNER`: `tezcatl` or Playwright.)
 
 Runtime deps are declared in `package.json` (only the gates that need them pull
 them: `linkedom`/`@mozilla/readability` for structure-audit; `jsonld`/`n3`/
