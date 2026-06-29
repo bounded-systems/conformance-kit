@@ -1,0 +1,29 @@
+.github/workflows/version.yml
+  s_98e316d0b3248a::t_71a013a9695ad4 1-18
+.github/workflows/publish.yml
+  s_98e316d0b3248a::t_9a18e6febd8a2d 6-12
+.release/adopt-mint.md
+  s_98e316d0b3248a::t_dd479faa39748c 1-4
+.github/workflows/release.yml
+  s_98e316d0b3248a::t_61dc69a4de86f4 1-21
+README.md
+  s_98e316d0b3248a::t_10a9cb8350c7af 132-168
+.release/README.md
+  s_98e316d0b3248a::t_4a0e82521f9520 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "deecce7ca3bf96913d472a93b2db1c634a569827",
+  "prompts": {},
+  "sessions": {
+    "s_98e316d0b3248a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8db980ee-eb6b-4866-832b-f795cef7f33c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
