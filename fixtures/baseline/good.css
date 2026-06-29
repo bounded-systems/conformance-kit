@@ -1,0 +1,3 @@
+/* Only Baseline Widely Available features. */
+.card { display: flex; gap: 1rem; color: rebeccapurple; }
+.card > p { margin: 0; }

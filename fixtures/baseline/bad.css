@@ -1,0 +1,3 @@
+/* :has() is newly available; ::selection is limited — both below Widely Available. */
+.card:has(img) { outline: 1px solid; }
+::selection { background: rebeccapurple; }
