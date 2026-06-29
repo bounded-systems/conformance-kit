@@ -1,6 +1,6 @@
 {
   "name": "@bounded-systems/conformance-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Standalone, site-agnostic web-conformance toolkit: integrity tooling + build gates + provenance generators, all parameterized so a site vendors one kit instead of duplicating scripts.",
   "type": "module",
   "license": "MIT",
@@ -30,6 +30,30 @@
   },
   "scripts": {
     "test": "node test/run.mjs"
+  },
+  "files": [
+    "gates",
+    "generators",
+    "integrity",
+    "emitters",
+    "lib",
+    "provenance.json",
+    "vendor.example.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    "./gates/*": "./gates/*",
+    "./gates/conformance/*": "./gates/conformance/*",
+    "./generators/*": "./generators/*",
+    "./integrity/*": "./integrity/*",
+    "./emitters/*": "./emitters/*",
+    "./lib/*": "./lib/*"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",

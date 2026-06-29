@@ -1,0 +1,31 @@
+name: publish
+
+# Publishes @bounded-systems/conformance-kit to npm with build provenance, on a
+# `v*` tag push (the deliberate release trigger — merging to main never publishes).
+# Uses npm Trusted Publishing (OIDC): no stored NPM_TOKEN. The package's trusted
+# publisher must be configured once on npmjs.com (repo + this workflow); until then
+# the publish step fails closed.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # OIDC — npm provenance + trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+      - name: Test gate (must pass before publish)
+        run: npm test
+      - name: Publish to npm (provenance, public)
+        run: npm publish --provenance --access public
