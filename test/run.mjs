@@ -633,6 +633,14 @@ await test("gates/likeness-gate: near-duplicate + confusable categoricals, e2e o
   const dup = L.findNearDuplicates({ a: "#5C6B63", b: "#5E6B62", c: "#A6432F" });
   if (dup.count !== 1 || dup.duplicates[0].a !== "a") throw new Error("must flag the one near-duplicate ink pair");
   if (L.findNearDuplicates({ x: "#fff", y: "#fff" }).duplicates[0].identical !== true) throw new Error("identical pair flagged");
+  // identical-value pairs are intentional ALIASES — they don't count as redundancy,
+  // only near-but-DISTINCT pairs do (one alias + one near-dup → noRedundantTokens false,
+  // redundantTokens 1; drop the near-dup → noRedundantTokens true).
+  const alias = await L.runLikenessGate({ tokens: { card: "#ffffff", white: "#ffffff", inkA: "#5c6b63", inkB: "#5e6b62" } });
+  if (alias.summary.identicalPairs !== 1 || alias.summary.redundantTokens !== 1) throw new Error(`expected 1 alias + 1 redundant, got ${JSON.stringify(alias.summary)}`);
+  if (alias.likeness.noRedundantTokens !== false) throw new Error("a near-but-distinct pair must keep noRedundantTokens false");
+  const aliasOnly = await L.runLikenessGate({ tokens: { card: "#ffffff", white: "#ffffff", forest: "#0c5a42" } });
+  if (aliasOnly.likeness.noRedundantTokens !== true) throw new Error("identical aliases alone must NOT block noRedundantTokens");
   // (b) e2e: good passes (dup=warn), bad fails (categorical collapse under CVD + dup=error).
   const good = await L.runLikenessGate({ tokens: join(FIX, "likeness", "tokens.css"), config: join(FIX, "likeness", "good.config.json") });
   if (!good.passed || good.summary.nearDuplicates < 1) throw new Error(`good must pass yet surface near-dups, got ${JSON.stringify(good.summary)}`);
