@@ -1,0 +1,33 @@
+gates/baseline-gate.mjs
+  s_71a0aecf45d82c::t_365a157de21b85 1-112
+fixtures/baseline/bad.css
+  s_71a0aecf45d82c::t_1c6358b38eb68f 1-3
+fixtures/baseline/good.css
+  s_71a0aecf45d82c::t_1c6358b38eb68f 1-3
+package.json
+  s_71a0aecf45d82c::t_811a130365adcc 24
+  s_71a0aecf45d82c::t_e70386993a731c 42-43
+test/run.mjs
+  s_71a0aecf45d82c::t_465dc827824cb4 391-415
+README.md
+  s_71a0aecf45d82c::t_3e7c39ec914318 15
+  s_71a0aecf45d82c::t_51f8ad2a2dc930 72
+package-lock.json
+  s_71a0aecf45d82c::t_d5c54fd50e1b73 20-21,33,43-65,78-254,277-298,308-342,692-703,1092-1149,1206-1217,1272-1293,1311-1369,1386-1398,1411-1422,1516-1521,1534-1537,1543-1561,1570-1625,1649-1686,1711-1722,1756-1849,1856-1867,1979-2019,2029-2094,2107-2152,2244-2261,2274-2279,2310-2315,2351-2400,2545-2563,2622-2630,2655-2684,2710-2800,2836-2873,3021-3071,3117-3128,3146-3174,3213-3221,3253-3456,3492-3509,3538-3561
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "80a0b929d38a8e666aae9453fc493bca83eb3206",
+  "prompts": {},
+  "sessions": {
+    "s_71a0aecf45d82c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6f6e806-c9db-459c-ba56-79aa27861998",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}

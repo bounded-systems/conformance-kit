@@ -1,0 +1,41 @@
+README.md
+  s_71a0aecf45d82c::t_a62b145262f051 17
+  s_71a0aecf45d82c::t_ac894283296148 91
+fixtures/snapshots/article.html
+  s_71a0aecf45d82c::t_6a97e85b49534f 1-20
+package.json
+  s_71a0aecf45d82c::t_f9fcb43509b32e 28-29
+  s_399e6065f1b4a3::t_fb43864380bea6 45
+generators/gen-snapshots.mjs
+  s_71a0aecf45d82c::t_a4c68676273b8a 1-108
+test/run.mjs
+  s_71a0aecf45d82c::t_2d46184bce013e 416-430,432-433,437-440
+  s_71a0aecf45d82c::t_38159060f98258 431
+  s_71a0aecf45d82c::t_eb2c4b14f8d479 434-436
+package-lock.json
+  s_71a0aecf45d82c::t_7c5dcd52e4f704 22,27,301-306,3479-3491
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "7e0e5a240190c354503fa48e5b60c0264092b531",
+  "prompts": {},
+  "sessions": {
+    "s_399e6065f1b4a3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a796dc6-3857-431d-90c5-9799f8d4865b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    },
+    "s_71a0aecf45d82c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6f6e806-c9db-459c-ba56-79aa27861998",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
