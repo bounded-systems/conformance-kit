@@ -20,6 +20,7 @@
     "ck-seo-gate": "./gates/seo-gate.mjs",
     "ck-axe-gate": "./gates/axe-gate.mjs",
     "ck-vuln-gate": "./gates/vuln-gate.mjs",
+    "ck-html-validator-gate": "./gates/html-validator-gate.mjs",
     "ck-readability-gate": "./gates/readability-gate.mjs",
     "ck-commonmark-runner": "./gates/commonmark-runner.mjs",
     "ck-gen-cid": "./generators/gen-cid.mjs",
@@ -36,6 +37,7 @@
     "linkedom": "^0.18.0",
     "n3": "^1.17.3",
     "rdf-validate-shacl": "^0.5.10",
-    "sigstore": "^5.0.0"
+    "sigstore": "^5.0.0",
+    "vnu-jar": "^26.6.24"
   }
 }

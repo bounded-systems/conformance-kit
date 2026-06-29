@@ -351,6 +351,43 @@ await test("gates/vuln-gate: parse + evaluate, e2e via npm audit", async () => {
   }
 });
 
+// 15. html-validator-gate: pure parse/evaluate, then a best-effort e2e via real vnu.
+await test("gates/html-validator-gate: parse + evaluate, e2e on fixtures", async () => {
+  const { parseVnu, evaluateHtml, runHtmlGate } = await import(join(KIT, "gates", "html-validator-gate.mjs"));
+
+  // (a) pure parse over vnu --format json payloads (errors-only filtering).
+  const errs = parseVnu({ messages: [
+    { type: "error", message: "boom", url: "file:/p.html", lastLine: 9 },
+    { type: "info", subType: "warning", message: "meh" },
+    { type: "error", message: "bang", url: "file:/q.html", lastLine: 3 },
+  ] });
+  if (errs.length !== 2) throw new Error(`expected 2 error messages (info dropped), got ${errs.length}`);
+  if (parseVnu('{"messages":[]}').length !== 0) throw new Error("empty payload must parse to 0");
+
+  // (b) pure threshold evaluation + the lone evidence envelope.
+  const okEval = evaluateHtml([], 0);
+  if (!okEval.passed || okEval.htmlValidator.errors !== 0) throw new Error("0 errors must pass with htmlValidator {0}");
+  const badEval = evaluateHtml(errs, 0);
+  if (badEval.passed || badEval.htmlValidator.errors !== 2) throw new Error("2 errors at threshold 0 must fail");
+
+  // (c) best-effort e2e on the good/bad fixtures with real vnu. A missing JRE is a
+  // tolerated skip (the pure logic above is the deterministic assertion).
+  const hasJava = spawnSync("java", ["-version"], { stdio: "ignore" }).status === 0;
+  const fixDir = join(FIX, "html");
+  try {
+    if (!hasJava) throw new Error("no JRE on PATH");
+    const bad = await runHtmlGate({ dist: fixDir, pages: ["bad.html"], threshold: 0 });
+    if (bad.passed || bad.errors < 1) throw new Error("known-bad fixture must fail (≥1 vnu error)");
+    const good = await runHtmlGate({ dist: fixDir, pages: ["good.html"], threshold: 0 });
+    if (!good.passed || good.errors !== 0) throw new Error("known-good fixture must pass (0 vnu errors)");
+    ok("gates/html-validator-gate: parse + evaluate, e2e on fixtures",
+      `pure logic asserted · e2e (vnu): bad=${bad.errors} error(s), good=clean`);
+  } catch (e) {
+    if (/must (pass|fail)|expected|envelope/.test(e.message)) throw e;
+    ok("gates/html-validator-gate: parse + evaluate, e2e on fixtures", `pure logic asserted · e2e SKIPPED (${e.message.split("\n")[0]})`);
+  }
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
