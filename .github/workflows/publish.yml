@@ -3,11 +3,13 @@ name: publish
 # Publishes @bounded-systems/conformance-kit to npm with build provenance, via npm
 # Trusted Publishing (OIDC) — no stored NPM_TOKEN, no 2FA.
 #
-# Release flow: bump the version on `main`, fast-forward `main` into the `publish`
-# branch, and push — CI publishes whatever version is in package.json. (A `v*` tag
-# push, or a manual dispatch, releases too.) The publish step is IDEMPOTENT: if that
-# version is already on npm it is SKIPPED, so re-pushing `publish` without a version
-# bump is a clean no-op, never a red build.
+# Release flow (mint-owned versioning — see .release/ + README "Releasing"):
+# each PR drops a `.release/` intent, `mint version` bumps package.json + CHANGELOG,
+# and `mint release` cuts the signed `v<version>` tag. That tag triggers this job
+# (npm publish) alongside release.yml (in-toto release provenance). The publish step
+# is IDEMPOTENT: if that version is already on npm it is SKIPPED, so a re-run without
+# a version bump is a clean no-op, never a red build. (The legacy `publish`-branch
+# fast-forward + `workflow_dispatch` remain as manual fallbacks.)
 on:
   push:
     branches: [publish]

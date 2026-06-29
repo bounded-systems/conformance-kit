@@ -129,6 +129,43 @@ Consumers run it straight from JSR:
 deno run -A jsr:@bounded-systems/verify https://your-site
 ```
 
+## Releasing
+
+Versioning is owned by [@bounded-systems/mint](https://github.com/bounded-systems/mint) —
+**intent files in, signed release out** — replacing the old hand-edited
+`package.json` version + `publish`-branch fast-forward.
+
+1. **Per PR** — drop one intent in [`.release/`](.release/README.md):
+
+   ```markdown
+   ---
+   bump: minor   # patch | minor | major
+   ---
+   short summary of the change (becomes the changelog line)
+   ```
+
+   The `version` CI job (`mint plan`, pinned to a mint SHA) validates every intent
+   and previews the next version on each PR; it fails closed on a malformed one.
+
+2. **Cut a release** — on `main`:
+
+   ```sh
+   mint version   # bump package.json (+ lockfile), prepend CHANGELOG.md, consume intents
+   mint release   # cut the signed v<version> tag (CI keyless-signs the provenance)
+   ```
+
+The `v<version>` tag then drives **two** independent jobs:
+
+- **`publish.yml`** — publishes `@bounded-systems/conformance-kit` to npm via OIDC
+  trusted publishing (unchanged; mint owns version + tag, not the registry push).
+- **`release.yml`** — calls mint's reusable `release-provenance.yml`: emits the
+  deterministic in-toto release Statement (tag → version plan → commit),
+  keyless-signs it (cosign/OIDC), and attaches it to the GitHub release. Verify
+  with `cosign verify-blob` — the same bundle `@bounded-systems/verify` consumes.
+
+> Migration: the `publish` branch / manual `package.json` bump is retired. The tag
+> `mint release` cuts is now the single release trigger.
+
 ## Test
 
 ```
