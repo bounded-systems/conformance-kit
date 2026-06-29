@@ -72,7 +72,9 @@ export function evaluateJargon({ candidates, definitions = new Set(), threshold 
 // ── Impure: pull prose + defined terms out of a built page ───────────────────
 
 /** Extract the visible PROSE (excluding code/script/style/nav) and the set of
- *  terms the page DEFINES (<abbr title>, <dfn>, <dl><dt>), all lowercased. */
+ *  terms the page DEFINES (<abbr title>, <dfn>, <dl><dt>, or <a href>), all lowercased.
+ *  Semantic-link convention: a jargon term wrapped in <a href> links to its canonical
+ *  definition — the link IS the expansion. Linked terms count as defined, not undefined. */
 export function extractProseAndDefinitions(html) {
   const { document } = parseHTML(html);
   const definitions = new Set();
@@ -80,6 +82,8 @@ export function extractProseAndDefinitions(html) {
   for (const el of document.querySelectorAll("abbr")) { add(el.textContent || ""); add(el.getAttribute("title") || ""); }
   for (const el of document.querySelectorAll("dfn")) add(el.textContent || "");
   for (const el of document.querySelectorAll("dl dt")) add(el.textContent || "");
+  // Semantic-link convention: text inside <a href> is treated as defined/expanded.
+  for (const el of document.querySelectorAll("a[href]")) add(el.textContent || "");
   // Prose = body text minus code/script/style/nav. Walk text nodes and insert a
   // boundary space at every element edge, so adjacent blocks (e.g. <dt>/<dd>) don't
   // merge into a fake token ("frobnicator"+"the" → "frobnicatorthe").
