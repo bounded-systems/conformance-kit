@@ -1,0 +1,25 @@
+.gitignore
+  s_4ccf8ec3ddcbc8::t_d63103428c6002 6
+integrity/verify/package-lock.json
+  s_4ccf8ec3ddcbc8::t_a224cbcb2d7152 1-1207
+integrity/verify/package.json
+  s_4ccf8ec3ddcbc8::t_38b0594db913c1 1-10
+integrity/verify/verify.mjs
+  s_4ccf8ec3ddcbc8::t_82438cade9ba05 25,80-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "5a0acdb6b359b3de129f4fb08616fa0072889443",
+  "prompts": {},
+  "sessions": {
+    "s_4ccf8ec3ddcbc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "684a1b39-b25c-4f45-ac97-97af68184b7a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
