@@ -79,6 +79,53 @@ const EXTERNAL_EVALUATORS = {
       ? met(`selected AAA met (${v.criteria.length} criteria)`)
       : unmet("selected AAA not met");
   },
+  "design.palette-contrast": (e) => {
+    const v = e.palette;
+    if (!v) return notAssessed("no palette-token report supplied");
+    const gaps = [];
+    if (!v.cvdSafe) gaps.push("CVD-unsafe pairings");
+    if (!v.apcaBaseline) gaps.push("below APCA baseline");
+    if (!v.nonTextContrast) gaps.push("non-text contrast fails");
+    return gaps.length === 0
+      ? met("color tokens CVD-safe, APCA baseline, non-text contrast ok")
+      : unmet(gaps.join(", "));
+  },
+  "design.typography": (e) => {
+    const v = e.typography;
+    if (!v) return notAssessed("no typography-token report supplied");
+    const gaps = [];
+    if (!v.bodyLineHeight) gaps.push("body line-height < 1.5");
+    if (!v.textSpacingAchievable) gaps.push("text spacing not achievable");
+    if (!v.minFontSize) gaps.push("font below minimum");
+    if (!v.weightLegibility) gaps.push("thin weight illegible at size");
+    return gaps.length === 0
+      ? met("type tokens meet line-height, spacing, size, and weight bars")
+      : unmet(gaps.join(", "));
+  },
+  "design.target-size": (e) => {
+    const v = e.targetSize;
+    if (!v) return notAssessed("no target-size report supplied");
+    return v.minSizeAA
+      ? met("interactive tokens meet SC 2.5.8 AA target size")
+      : unmet("interactive tokens below SC 2.5.8 AA target size");
+  },
+  "design.opacity-contrast": (e) => {
+    const v = e.opacityContrast;
+    if (!v) return notAssessed("no opacity-contrast report supplied");
+    return v.effectiveContrast
+      ? met("effective contrast holds with token opacity composited")
+      : unmet("effective contrast fails once token opacity is composited");
+  },
+  "design.token-likeness": (e) => {
+    const v = e.tokenLikeness;
+    if (!v) return notAssessed("no token-likeness report supplied");
+    const gaps = [];
+    if (!v.distinctCategoricals) gaps.push("categorical tokens not distinct");
+    if (!v.noRedundantTokens) gaps.push("redundant near-duplicate tokens");
+    return gaps.length === 0
+      ? met("categorical tokens distinct; no redundant tokens")
+      : unmet(gaps.join(", "));
+  },
   "security.asvs": (e) => {
     const v = e.asvs;
     if (!v || v.achievedLevel == null) return notAssessed("no OWASP ASVS attestation supplied");
