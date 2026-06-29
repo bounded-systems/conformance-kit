@@ -1,0 +1,51 @@
+.github/workflows/publish.yml
+  s_98e316d0b3248a::t_1a2a493b3652a5 24-27,34-35
+fixtures/jargon/bad.html
+  s_98e316d0b3248a::t_5944ed9f1b68fa 1-7
+fixtures/jargon/good.html
+  s_98e316d0b3248a::t_f61569632524a1 1-11
+flake.nix
+  s_98e316d0b3248a::t_a811fd2ab4b760 13,21,42
+gates/jargon-gate.mjs
+  s_98e316d0b3248a::t_47ce6a631de323 1-159
+package-lock.json
+  s_98e316d0b3248a::t_3f3d1a2cbb375f 3,9,14,36,1118-1127
+package.json
+  s_dc3042bf98674e::t_91a3b4c4fa2153 3,26,62
+README.md
+  s_ddfe6c99bb00bb::t_b28167cd80d381 15,81
+test/run.mjs
+  s_ddfe6c99bb00bb::t_7c2e49d376b9de 482-512
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "229e8698bd081ec472c5b6c83878b771afbae22d",
+  "prompts": {},
+  "sessions": {
+    "s_98e316d0b3248a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8db980ee-eb6b-4866-832b-f795cef7f33c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    },
+    "s_dc3042bf98674e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a4c41b5-bdca-4635-99d7-b7338a15ff09",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    },
+    "s_ddfe6c99bb00bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a707ac1776056f04e",
+        "model": "unknown"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
