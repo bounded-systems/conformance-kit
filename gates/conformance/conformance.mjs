@@ -310,6 +310,64 @@ const EXTERNAL_EVALUATORS = {
   },
 
   // ── Cognitive ─────────────────────────────────────────────────────────────
+  // Agent/static heuristic accessibility review (tier-2; non-gating)
+  // HONEST FRAMING: agent/static heuristic review — NOT AT-user testing.
+  "a11y.agent-heuristic-review": (e) => {
+    const v = e.agentHeuristic;
+    if (!v) return notAssessed("no agent heuristic review supplied (run a11y-heuristic-gate)");
+    const gaps = [];
+    if (!v.landmarksPresent) gaps.push("required ARIA landmarks missing");
+    if (!v.interactiveNamesClean) gaps.push("interactive elements without accessible names");
+    if (!v.headingHierarchyClean) gaps.push("heading hierarchy issues");
+    if (!v.imagesAltClean) gaps.push("images without alt attributes");
+    if (!v.focusRingClean) gaps.push("inline focus ring removal detected");
+    if (v.errors > 0) gaps.push(`${v.errors} heuristic error(s)`);
+    if (gaps.length === 0) {
+      const axeNote = v.axeCorroboration
+        ? `; axe: ${v.axeCorroboration.critical} critical, ${v.axeCorroboration.serious} serious`
+        : "";
+      return met(
+        `agent heuristic pass clean — ${v.pages} page(s), ${v.warnings} warning(s)${axeNote}. ` +
+        "AGENT/STATIC HEURISTIC — NOT AT-user testing; a11y.wcag22-aa-manual stays not-assessed.",
+      );
+    }
+    return unmet(
+      `${gaps.join(", ")} (${v.pages} page(s), ${v.errors} error(s), ${v.warnings} warning(s)). ` +
+      "AGENT/STATIC HEURISTIC — fix machine-detectable issues then re-run.",
+    );
+  },
+  // COGA Obj-5 focus budget (cognitive tier; non-gating)
+  // HONEST FRAMING: agent/static interface-complexity proxy — NOT COGA usability testing.
+  "cognitive.focus-budget": (e) => {
+    const v = e.focusBudget;
+    if (!v) return notAssessed("no focus budget report supplied (run focus-budget-gate)");
+    const gaps = [];
+    if (!v.contentDensity.thresholdsMet) {
+      const breaches = v.contentDensity.breaches || [];
+      gaps.push(...breaches.map((b) => `${b} threshold exceeded`));
+    }
+    if (!v.interactionPatterns.patternsMet) {
+      const patterns = [];
+      if (v.interactionPatterns.autoDialogOnLoad) patterns.push("auto-opening dialog");
+      if (v.interactionPatterns.autoplayMedia) patterns.push("autoplay media");
+      if (v.interactionPatterns.timeLimits) patterns.push("time limit (meta refresh)");
+      if (v.interactionPatterns.focusRingRemoved) patterns.push("focus ring removed");
+      gaps.push(...patterns);
+    }
+    const proxyNote =
+      "AGENT/STATIC PROXY for COGA Obj-5 — NOT COGA usability testing with cognitive disabilities.";
+    if (gaps.length === 0) {
+      return met(`focus budget met — all content density thresholds and interaction patterns clean. ${proxyNote}`);
+    }
+    // `not-yet-met` is semantically distinct from `unmet` — it signals that
+    // thresholds are exceeded and CAN be fixed, but editorial decisions remain
+    // the maintainer's call. The conformance model maps it to "unmet" for counting;
+    // the detail string preserves the honest framing.
+    return unmet(
+      `not-yet-met: ${gaps.join(", ")}. ${proxyNote} ` +
+        "Do NOT mass-rewrite content — editorial is the maintainer's call; gate reports honestly.",
+    );
+  },
   "cognitive.coga-usability-testing": (e) => {
     const v = e.cogaUsability;
     if (!v) return notAssessed("no COGA usability testing supplied (optional)");

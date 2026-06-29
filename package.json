@@ -32,6 +32,8 @@
     "ck-jargon-gate": "gates/jargon-gate.mjs",
     "ck-readability-gate": "gates/readability-gate.mjs",
     "ck-ai-readability-gate": "gates/ai-readability-gate.mjs",
+    "ck-a11y-heuristic-gate": "gates/a11y-heuristic-gate.mjs",
+    "ck-focus-budget-gate": "gates/cognitive/focus-budget-gate.mjs",
     "ck-css-purity-gate": "gates/css-purity-gate.mjs",
     "ck-commonmark-runner": "gates/commonmark-runner.mjs",
     "ck-gen-cid": "generators/gen-cid.mjs",
@@ -51,12 +53,14 @@
     "provenance.json",
     "vendor.example.json",
     "README.md",
+    "COGA.md",
     "LICENSE"
   ],
   "exports": {
     "./package.json": "./package.json",
     "./gates/*": "./gates/*",
     "./gates/conformance/*": "./gates/conformance/*",
+    "./gates/cognitive/*": "./gates/cognitive/*",
     "./generators/*": "./generators/*",
     "./integrity/*": "./integrity/*",
     "./emitters/*": "./emitters/*",
