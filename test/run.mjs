@@ -320,6 +320,37 @@ await test("gates/axe-gate: classify + threshold + report, e2e on fixtures", asy
   }
 });
 
+// 14. vuln-gate: pure parse/evaluate logic, then a best-effort e2e via real npm audit.
+await test("gates/vuln-gate: parse + evaluate, e2e via npm audit", async () => {
+  const { parseAudit, evaluateVulns, runVulnGate } = await import(join(KIT, "gates", "vuln-gate.mjs"));
+
+  // (a) pure parse over npm-audit-shaped payloads.
+  const clean = parseAudit({ metadata: { vulnerabilities: { info: 0, low: 1, moderate: 2, high: 0, critical: 0 } } });
+  if (clean.known !== 0 || clean.high !== 0 || clean.critical !== 0) throw new Error("clean audit must total 0 critical/high");
+  const dirty = parseAudit({ metadata: { vulnerabilities: { high: 2, critical: 1 } } });
+  if (dirty.known !== 3 || dirty.critical !== 1 || dirty.high !== 2) throw new Error(`expected 3 known (1c/2h), got ${dirty.known}`);
+  if (parseAudit({}).known !== 0) throw new Error("missing metadata must parse to 0");
+
+  // (b) pure threshold evaluation + the lone evidence envelope.
+  const cleanEval = evaluateVulns(clean, 0);
+  if (!cleanEval.passed || cleanEval.vulns.knownCriticalOrHighVulns !== 0) throw new Error("clean must pass with vulns {0}");
+  const bad = evaluateVulns(dirty, 0);
+  if (bad.passed || bad.vulns.knownCriticalOrHighVulns !== 3) throw new Error("3 known at threshold 0 must fail");
+  if (!evaluateVulns(dirty, 5).passed) throw new Error("3 known at threshold 5 must pass");
+
+  // (c) best-effort e2e: real npm audit over the kit's own lockfile. Offline/registry
+  // failures are a tolerated skip (the pure logic above is the always-on assertion).
+  try {
+    const rep = runVulnGate({ root: KIT, omitDev: true, threshold: 0 });
+    if (typeof rep.vulns.knownCriticalOrHighVulns !== "number") throw new Error("e2e report missing the vulns envelope");
+    ok("gates/vuln-gate: parse + evaluate, e2e via npm audit",
+      `pure logic asserted · e2e: ${rep.knownCriticalOrHighVulns} known critical/high in prod deps`);
+  } catch (e) {
+    if (/must (pass|fail|total)|envelope|expected/.test(e.message)) throw e;
+    ok("gates/vuln-gate: parse + evaluate, e2e via npm audit", `pure logic asserted · e2e SKIPPED (${e.message.split("\n")[0]})`);
+  }
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
