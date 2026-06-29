@@ -388,6 +388,31 @@ await test("gates/html-validator-gate: parse + evaluate, e2e on fixtures", async
   }
 });
 
+// 16. baseline-gate: pure classify/threshold, then a deterministic e2e via stylelint.
+await test("gates/baseline-gate: classify + threshold, e2e on fixtures", async () => {
+  const { classify, meetsTarget, evaluateBaseline, runBaselineGate } = await import(join(KIT, "gates", "baseline-gate.mjs"));
+
+  // (a) pure classification from the two-pass counts.
+  if (classify(0, 0) !== "widely") throw new Error("0 below widely → widely");
+  if (classify(2, 0) !== "newly") throw new Error("below-widely but not below-newly → newly");
+  if (classify(2, 1) !== "limited") throw new Error("any below-newly → limited");
+
+  // (b) pure target threshold + the lone evidence envelope.
+  if (!meetsTarget("widely", "widely") || !meetsTarget("widely", "newly")) throw new Error("widely meets any target");
+  if (meetsTarget("limited", "newly") || meetsTarget("newly", "widely")) throw new Error("below-target must not meet");
+  const ev = evaluateBaseline("widely", "widely");
+  if (!ev.passed || ev.baseline.status !== "widely") throw new Error("widely@widely must pass with baseline {widely}");
+  if (evaluateBaseline("limited", "widely").passed) throw new Error("limited@widely must fail");
+
+  // (c) deterministic e2e via stylelint over the fixtures (pure npm — runs in CI).
+  const good = await runBaselineGate({ css: join(FIX, "baseline", "good.css"), target: "widely" });
+  if (!good.passed || good.status !== "widely") throw new Error(`good.css must be widely, got ${good.status}`);
+  const bad = await runBaselineGate({ css: join(FIX, "baseline", "bad.css"), target: "widely" });
+  if (bad.passed || bad.status === "widely" || bad.offenders.length < 1) throw new Error(`bad.css must be below widely, got ${bad.status}`);
+  ok("gates/baseline-gate: classify + threshold, e2e on fixtures",
+    `pure logic asserted · e2e (stylelint): good=widely, bad=${bad.status} (${bad.offenders.length} below-widely)`);
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
