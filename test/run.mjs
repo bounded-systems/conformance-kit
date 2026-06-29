@@ -725,6 +725,27 @@ await test("gates/ai-readability: links + siblings logic, evidence on fixtures",
     `pure logic asserted · good=all-pass · bad: broken=${badr.details.brokenLinks.length}, missing-siblings=${badr.details.missingSiblings.length}`);
 });
 
+// N. css-purity: "no inline values, always tokens" — raw dimensions forbidden.
+await test("gates/css-purity: raw dimensions forbidden, tokens + structural units pass", async () => {
+  const m = await import(join(KIT, "gates", "css-purity-gate.mjs"));
+  // (a) pure: isolate raw lengths outside the token system; allowances pass.
+  if (m.rawLengthsIn("var(--bs-space-4) 12px 0 100%").join() !== "12px") throw new Error("must isolate the lone 12px");
+  if (m.rawLengthsIn("calc(var(--bs-size) - 1px)", { allow: new Set(["1px"]) }).length !== 0) throw new Error("allowlisted 1px must pass");
+  if (m.rawLengthsIn("repeat(2, minmax(160px, 1fr))").join() !== "160px") throw new Error("must flag the 160px inside minmax, not 1fr");
+  // (b) dimension purity: raw px flagged (incl. inside grid-template), 0/100%/fr/auto/tokens pass.
+  const bad = m.checkCssPurity(".c{ width: 420px; gap: var(--bs-space-3); grid-template-columns: 1fr 320px; padding: 0; }");
+  const raws = bad.violations.filter((v) => v.kind === "raw-dimension").map((v) => v.detail).sort();
+  if (raws.join() !== "320px,420px") throw new Error(`expected 420px + 320px, got ${raws}`);
+  const good = m.checkCssPurity(".c{ width: var(--bs-size-card); max-width: 100%; margin: 0 auto; grid-template-columns: repeat(2, minmax(var(--bs-size-col), 1fr)); }");
+  if (!good.ok) throw new Error(`tokenized CSS must pass, got ${JSON.stringify(good.violations)}`);
+  // (c) opt-in colour purity + token-membership against a vocabulary.
+  const col = m.checkCssPurity("a{ color: #fff; background: var(--bs-color-x); }", { colors: true, vocab: new Set(["--bs-color-y"]) });
+  if (!col.violations.some((v) => v.kind === "literal-color") || !col.violations.some((v) => v.kind === "unknown-token"))
+    throw new Error("colours + unknown-token membership must both flag");
+  ok("gates/css-purity: raw dimensions forbidden, tokens + structural units pass",
+    `pure asserted · bad=${raws.length} raw dims (incl. grid-template) · colours+vocab enforced`);
+});
+
 await rm(work, { recursive: true, force: true });
 console.log(`\n${failed ? "✗" : "✓"} conformance-kit tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
