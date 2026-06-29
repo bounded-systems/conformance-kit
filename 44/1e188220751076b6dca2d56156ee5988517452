@@ -1,0 +1,24 @@
+flake.nix
+  s_71a0aecf45d82c::t_89982429f34f44 45-50,54-55
+  s_71a0aecf45d82c::t_aa357a1c7a854a 1-44,51-53,56-78
+README.md
+  s_71a0aecf45d82c::t_9937fc886e48c2 29,41-47
+flake.lock
+  s_71a0aecf45d82c::t_79ea911b678ba7 1-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "441e188220751076b6dca2d56156ee5988517452",
+  "prompts": {},
+  "sessions": {
+    "s_71a0aecf45d82c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6f6e806-c9db-459c-ba56-79aa27861998",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": null
+    }
+  }
+}
