@@ -1,0 +1,19 @@
+gates/a11y-heuristic-gate.mjs
+  s_98e316d0b3248a::t_2fcdc48bda04e0 346-352,359
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "23b13922d1f71c8ab1d4ccf83f2f83bd52648208",
+  "prompts": {},
+  "sessions": {
+    "s_98e316d0b3248a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8db980ee-eb6b-4866-832b-f795cef7f33c",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
