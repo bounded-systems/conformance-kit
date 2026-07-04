@@ -77,13 +77,19 @@ const STATUS_LABEL = { met: "met", unmet: "unmet", "not-assessed": "not assessed
  * @param {object} [opts]
  * @param {(criterion:object)=>(string|undefined)} [opts.evidenceHref] Maps a
  *   criterion-result to the URL of its evidence; omit/return falsy → no link.
+ * @param {(criterion:object, href:string)=>(string|undefined)} [opts.evidenceLabel]
+ *   Maps a criterion-result (+ the href evidenceHref already resolved for it) to the
+ *   link's VISIBLE text. Omit, or return falsy, to fall back to the generic "evidence"
+ *   — but a fixed label for every criterion regardless of what it actually links to
+ *   (a JSON API, a CI workflow, a source file, a signed artifact) reads as the same
+ *   thing everywhere when it isn't; supplying this lets the target determine the text.
  * @param {number} [opts.headingLevel] Heading level for the `ck-conformance`
  *   section title (default 2). Per-area titles render one level below it.
  * @param {string} [opts.idPrefix] Prefix for per-criterion element ids (default "ck").
  * @returns {string} HTML fragment
  */
 export function renderConformanceReport(report, opts = {}) {
-  const { evidenceHref, headingLevel = 2, idPrefix = "ck" } = opts;
+  const { evidenceHref, evidenceLabel, headingLevel = 2, idPrefix = "ck" } = opts;
   // The `ck-conformance` section heading sits at `headingLevel`; per-area
   // sub-sections nest one level below it (a valid document outline, and it gives
   // the outer <section> the heading vnu's `--Werror` requires).
@@ -93,7 +99,7 @@ export function renderConformanceReport(report, opts = {}) {
 
   const areaBlocks = report.areaSummaries.map((a) => {
     const inArea = report.results.filter((r) => r.area === a.area);
-    const items = inArea.map((r) => renderCriterion(r, { evidenceHref, idPrefix })).join("\n");
+    const items = inArea.map((r) => renderCriterion(r, { evidenceHref, evidenceLabel, idPrefix })).join("\n");
     return `      <section class="ck-area" data-area="${esc(a.area)}">
         <h${hArea} class="ck-area__title">${esc(a.area)} <span class="ck-area__count">${a.met}/${a.total} met</span></h${hArea}>
         <p class="ck-area__summary">${esc(a.summary)}</p>
@@ -113,10 +119,16 @@ ${areaBlocks}
     </section>`;
 }
 
-function renderCriterion(r, { evidenceHref, idPrefix }) {
+function renderCriterion(r, { evidenceHref, evidenceLabel, idPrefix }) {
   const href = typeof evidenceHref === "function" ? evidenceHref(r) : undefined;
+  // No hardcoded "&#8599;" here — an outbound-link indicator is a presentation
+  // decision (this file stays no-inline-styles/no-hardcoded-chrome); a consumer
+  // that wants one adds it in CSS, keyed off the href itself (e.g. an
+  // `a[href^="http"]::after` rule), so it's automatic and can't drift out of sync
+  // with what a link actually points at.
+  const label = href ? ((typeof evidenceLabel === "function" ? evidenceLabel(r, href) : undefined) || "evidence") : undefined;
   const evidenceLink = href
-    ? ` <a class="ck-criterion__evidence" href="${esc(href)}">evidence &#8599;</a>`
+    ? ` <a class="ck-criterion__evidence" href="${esc(href)}">${esc(label)}</a>`
     : "";
   const tier = r.tier ?? 1;
   return `          <li class="ck-criterion" id="${esc(idPrefix)}-${esc(r.id)}" data-status="${esc(r.status)}" data-area="${esc(r.area)}" data-tier="${esc(String(tier))}">
