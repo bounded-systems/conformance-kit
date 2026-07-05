@@ -39,7 +39,9 @@
     "ck-gen-cid": "generators/gen-cid.mjs",
     "ck-gen-identity": "generators/gen-identity.mjs",
     "ck-gen-snapshots": "generators/gen-snapshots.mjs",
-    "ck-gen-print-snapshots": "generators/gen-print-snapshots.mjs"
+    "ck-gen-print-snapshots": "generators/gen-print-snapshots.mjs",
+    "ck-claim-discipline-gate": "gates/claim-discipline-gate.mjs",
+    "ck-grammar-repetition-gate": "gates/grammar-repetition-gate.mjs"
   },
   "scripts": {
     "test": "node test/run.mjs"
