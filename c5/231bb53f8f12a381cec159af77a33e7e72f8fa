@@ -1,0 +1,22 @@
+gates/doc-scope-gate.mjs
+  s_70508ca017cb29::t_e48b546e5cd31d 22
+  s_70508ca017cb29::t_fee082436da458 1-21,23-82
+.release/doc-scope-gate.md
+  s_70508ca017cb29::t_e9b3f4bddbe6dd 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "c5231bb53f8f12a381cec159af77a33e7e72f8fa",
+  "prompts": {},
+  "sessions": {
+    "s_70508ca017cb29": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d283f13f-34c8-429b-8cb1-b020e645c0e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
