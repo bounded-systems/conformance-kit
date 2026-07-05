@@ -43,7 +43,8 @@
     "ck-claim-discipline-gate": "gates/claim-discipline-gate.mjs",
     "ck-grammar-repetition-gate": "gates/grammar-repetition-gate.mjs",
     "ck-doc-scope-gate": "gates/doc-scope-gate.mjs",
-    "ck-token-grounding-gate": "gates/token-grounding-gate.mjs"
+    "ck-token-grounding-gate": "gates/token-grounding-gate.mjs",
+    "ck-graph-split": "gates/graph-split.mjs"
   },
   "scripts": {
     "test": "node test/run.mjs"
