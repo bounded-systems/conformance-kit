@@ -42,7 +42,8 @@
     "ck-gen-print-snapshots": "generators/gen-print-snapshots.mjs",
     "ck-claim-discipline-gate": "gates/claim-discipline-gate.mjs",
     "ck-grammar-repetition-gate": "gates/grammar-repetition-gate.mjs",
-    "ck-doc-scope-gate": "gates/doc-scope-gate.mjs"
+    "ck-doc-scope-gate": "gates/doc-scope-gate.mjs",
+    "ck-token-grounding-gate": "gates/token-grounding-gate.mjs"
   },
   "scripts": {
     "test": "node test/run.mjs"
