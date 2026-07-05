@@ -1,0 +1,25 @@
+LAYERS.md
+  s_70508ca017cb29::t_0ba95a39a7a43a 1-39
+gates/token-grounding-gate.mjs
+  s_70508ca017cb29::t_e143fb06e464ae 1-70
+.release/token-grounding-gate.md
+  s_70508ca017cb29::t_4f50936d23ddc7 1-4
+package.json
+  s_70508ca017cb29::t_de9abf98364c7e 45-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "4b6397aed72a6f1044f882d1be3635bf7d7a9e93",
+  "prompts": {},
+  "sessions": {
+    "s_70508ca017cb29": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d283f13f-34c8-429b-8cb1-b020e645c0e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
