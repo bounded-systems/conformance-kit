@@ -1,0 +1,23 @@
+CHANGELOG.md
+  s_70508ca017cb29::t_b977b289ed69bf 1-10
+package-lock.json
+  s_70508ca017cb29::t_4ead64b8260281 3,9
+package.json
+  s_70508ca017cb29::t_a35d62ba72ba19 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "d8ba23e0f1dbc14e510b77d5e95ec8be6171a6a5",
+  "prompts": {},
+  "sessions": {
+    "s_70508ca017cb29": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d283f13f-34c8-429b-8cb1-b020e645c0e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
