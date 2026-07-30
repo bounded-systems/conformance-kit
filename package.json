@@ -75,7 +75,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@mozilla/readability": "^0.5.0",
+    "@mozilla/readability": "^0.6.0",
     "@zazuko/env-node": "^2.1.5",
     "an-array-of-english-words": "^2.0.0",
     "axe-core": "^4.10.0",
