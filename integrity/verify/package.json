@@ -5,6 +5,6 @@
   "description": "Standalone, offline cryptographic verifier — checks a site serves bytes matching its keyless-signed manifest (sigstore-js, in-process bundle verify).",
   "type": "module",
   "bin": { "verify": "./verify.mjs" },
-  "dependencies": { "sigstore": "^2.3.1" },
+  "dependencies": { "sigstore": "^5.0.0" },
   "engines": { "node": ">=20" }
 }
