@@ -1,0 +1,20 @@
+# A dataset that VIOLATES fixtures/jsonld.shapes.ttl — the negative fixture.
+#
+# The gate had no failing case at all before this: every SHACL test asserted
+# `conforms: true`, so nothing proved the runner could report `false` or exit
+# non-zero. A gate that has never been observed failing is indistinguishable
+# from one that cannot fail, and the difference only shows up the day it matters.
+#
+# Two distinct violations, so a single over-broad fix cannot quietly satisfy it:
+#   - schema:name absent entirely      (sh:minCount 1)
+#   - schema:url is a literal, not IRI (sh:nodeKind sh:IRI)
+
+@prefix schema: <https://schema.org/> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+
+<https://fixture.example/person/nameless> a schema:Person ;
+  schema:url <https://fixture.example/nameless> .
+
+<https://fixture.example/person/bad-url> a schema:Person ;
+  schema:name "Grace Hopper"^^xsd:string ;
+  schema:url  "not-an-iri"^^xsd:string .

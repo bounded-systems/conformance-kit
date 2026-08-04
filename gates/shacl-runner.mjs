@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // SHACL runner — turns a site's emitted JSON-LD into an ENFORCEABLE contract.
 //
-//   node gates/shacl-runner.mjs <shapes.ttl> <htmlDir>
+//   node gates/shacl-runner.mjs <shapes.ttl> <htmlDir>       # built HTML (default)
+//   node gates/shacl-runner.mjs <shapes.ttl> --turtle <file> # an RDF dataset
+//   node gates/shacl-runner.mjs <shapes.ttl> --jsonld <file> # a JSON-LD document
 //
 // Schema.org alone is flexible guidance. Schema.org + SHACL is an enforceable
 // contract: this runner extracts every JSON-LD block from the BUILT HTML under
@@ -15,9 +17,22 @@
 // and search-engine rich-result eligibility. SHACL is the enforceable STRUCTURAL
 // contract.
 //
+// NOT EVERY ARTIFACT IS A WEBSITE
+// ------------------------------
+// The HTML path above assumes the thing under validation is a built site. A
+// consumer whose artifact is a dataset — a database mirror, an export, a
+// manifest — has no HTML, and emitting throwaway pages purely to carry JSON-LD
+// past this front door would be fabricating an artifact to satisfy a signature.
+// So `--turtle` / `--jsonld` take the dataset directly. Everything downstream is
+// identical: same shapes, same validator, same report, same exit codes. Only
+// where the quads come from differs.
+//
 // Site-agnostic injection:
 //   argv[2]         path to the SHACL shapes Turtle file (required).
-//   argv[3]         directory of built HTML to scan recursively (required).
+//   argv[3]         directory of built HTML to scan recursively, OR one of the
+//                   dataset flags below (required).
+//   --turtle <file> validate this Turtle file instead of scanning HTML.
+//   --jsonld <file> validate this JSON-LD document instead of scanning HTML.
 //   $SHACL_CONTEXT  optional path to a JSON-LD context document to use instead of
 //                   the built-in offline schema.org context (for non-schema.org
 //                   vocabularies). The gate NEVER fetches a context over the network.
@@ -30,14 +45,27 @@ import { Parser as N3Parser } from "n3";
 import rdf from "@zazuko/env-node"; // RDF/JS env with .dataset() + clownface (required by rdf-validate-shacl)
 import SHACLValidator from "rdf-validate-shacl";
 
+const USAGE = "usage: shacl-runner <shapes.ttl> ( <htmlDir> | --turtle <file> | --jsonld <file> )";
+
 const shapesPath = process.argv[2];
-const htmlDir = process.argv[3];
-if (!shapesPath || !htmlDir) {
-  console.error("usage: shacl-runner <shapes.ttl> <htmlDir>");
+const target = process.argv[3];
+if (!shapesPath || !target) {
+  console.error(USAGE);
+  process.exit(2);
+}
+
+// Exactly one input mode. A flag with no path is a usage error rather than a
+// silent fallback to HTML scanning — a gate that quietly validates something
+// other than what you named is worse than one that refuses.
+const DATASET_FLAGS = { "--turtle": "turtle", "--jsonld": "jsonld" };
+const mode = DATASET_FLAGS[target] ?? "html";
+const inputPath = mode === "html" ? target : process.argv[4];
+if (mode !== "html" && !inputPath) {
+  console.error(`shacl-runner: ${target} needs a file path\n${USAGE}`);
   process.exit(2);
 }
 const SHAPES = resolve(shapesPath);
-const DIST = resolve(htmlDir);
+const DIST = resolve(inputPath);
 
 // --- offline JSON-LD context ----------------------------------------------------
 // Sites commonly emit `"@context": "https://schema.org"`. Expanding that normally
@@ -102,13 +130,55 @@ async function turtleToDataset(ttl) {
   return rdf.dataset(quads);
 }
 
+/** Print one violation per line, identically for whichever input produced it. */
+function printViolations(report) {
+  for (const r of report.results) {
+    const path = r.path?.value ?? "(node)";
+    const focus = r.focusNode?.value ?? "(?)";
+    const shape = r.sourceShape?.value ?? "";
+    const msg = r.message?.map((m) => m.value).join("; ") || r.sourceConstraintComponent?.value || "violation";
+    console.log(`      ✗ ${focus}  [${path}]  ${msg}  <${shape}>`);
+  }
+}
+
+/**
+ * Validate a dataset given directly, rather than scraped out of built HTML.
+ *
+ * Same shapes, same validator, same exit codes — the only difference from the
+ * HTML path is where the quads came from.
+ */
+async function validateDataset(validator) {
+  const raw = await readFile(DIST, "utf8");
+  const data = mode === "turtle" ? await turtleToDataset(raw) : await jsonLdToDataset(JSON.parse(raw));
+
+  const report = validator.validate(data);
+  const rel = inputPath;
+  if (report.conforms) {
+    console.log(`  ${rel}: ${data.size} quad(s) — conforms: true`);
+    console.log("");
+    console.log(`✓ shacl-runner: conforms: true — ${data.size} quad(s) satisfy the SHACL contract`);
+    return;
+  }
+  console.log(`  ${rel}: ${data.size} quad(s) — conforms: FALSE`);
+  printViolations(report);
+  console.log("");
+  console.error(`✗ shacl-runner: dataset does NOT conform to ${shapesPath}`);
+  process.exit(1);
+}
+
 async function main() {
   if (!existsSync(SHAPES)) { console.error(`✗ shacl-runner: shapes file not found — ${SHAPES}`); process.exit(2); }
-  if (!existsSync(DIST)) { console.error(`✗ shacl-runner: html dir not found — ${DIST}`); process.exit(2); }
+  if (!existsSync(DIST)) {
+    const what = mode === "html" ? "html dir" : `${mode} file`;
+    console.error(`✗ shacl-runner: ${what} not found — ${DIST}`);
+    process.exit(2);
+  }
 
   const shapesTtl = await readFile(SHAPES, "utf8");
   const shapes = await turtleToDataset(shapesTtl);
   const validator = new SHACLValidator(shapes, { factory: rdf });
+
+  if (mode !== "html") return validateDataset(validator);
 
   const files = await listHtmlFiles(DIST);
   let totalBlocks = 0;
@@ -136,13 +206,7 @@ async function main() {
     } else {
       failed = true;
       console.log(`  ${rel}: ${blocks.length} block(s) — conforms: FALSE`);
-      for (const r of report.results) {
-        const path = r.path?.value ?? "(node)";
-        const focus = r.focusNode?.value ?? "(?)";
-        const shape = r.sourceShape?.value ?? "";
-        const msg = r.message?.map((m) => m.value).join("; ") || r.sourceConstraintComponent?.value || "violation";
-        console.log(`      ✗ ${focus}  [${path}]  ${msg}  <${shape}>`);
-      }
+      printViolations(report);
     }
   }
 
