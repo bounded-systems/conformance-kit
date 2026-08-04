@@ -42,8 +42,11 @@ import { join, resolve } from "node:path";
 
 import jsonld from "jsonld";
 import { Parser as N3Parser } from "n3";
-import rdf from "@zazuko/env-node"; // RDF/JS env with .dataset() + clownface (required by rdf-validate-shacl)
-import SHACLValidator from "rdf-validate-shacl";
+import rdf from "@zazuko/env-node"; // RDF/JS env with .dataset() + clownface
+import { Validator as SHACLValidator } from "shacl-engine";
+// SHACL-SPARQL support is OPT-IN and silently absent without these two options —
+// see the constructor below. Importing them here so the coupling is visible.
+import { targetResolvers, validations } from "shacl-engine/sparql.js";
 
 const USAGE = "usage: shacl-runner <shapes.ttl> ( <htmlDir> | --turtle <file> | --jsonld <file> )";
 
@@ -130,14 +133,31 @@ async function turtleToDataset(ttl) {
   return rdf.dataset(quads);
 }
 
+/**
+ * Render a result's property path.
+ *
+ * shacl-engine reports a path as an array of segments carrying `predicates`,
+ * where rdf-validate-shacl reported a single term. Both are handled so the
+ * printed line is unchanged by the engine swap — consumers read these logs.
+ */
+function pathLabel(path) {
+  if (!path) return "(node)";
+  if (path.value) return path.value;
+  if (Array.isArray(path)) {
+    const segs = path.map((s) => (s.predicates ?? []).map((t) => t.value).join("|")).filter(Boolean);
+    if (segs.length) return segs.join("/");
+  }
+  return "(node)";
+}
+
 /** Print one violation per line, identically for whichever input produced it. */
 function printViolations(report) {
   for (const r of report.results) {
-    const path = r.path?.value ?? "(node)";
     const focus = r.focusNode?.value ?? "(?)";
-    const shape = r.sourceShape?.value ?? "";
-    const msg = r.message?.map((m) => m.value).join("; ") || r.sourceConstraintComponent?.value || "violation";
-    console.log(`      ✗ ${focus}  [${path}]  ${msg}  <${shape}>`);
+    const shape = r.shape?.ptr?.value ?? r.sourceShape?.value ?? "";
+    const component = r.constraintComponent?.value ?? r.sourceConstraintComponent?.value;
+    const msg = r.message?.map((m) => m.value).join("; ") || component || "violation";
+    console.log(`      ✗ ${focus}  [${pathLabel(r.path)}]  ${msg}  <${shape}>`);
   }
 }
 
@@ -151,7 +171,7 @@ async function validateDataset(validator) {
   const raw = await readFile(DIST, "utf8");
   const data = mode === "turtle" ? await turtleToDataset(raw) : await jsonLdToDataset(JSON.parse(raw));
 
-  const report = validator.validate(data);
+  const report = await validator.validate({ dataset: data });
   const rel = inputPath;
   if (report.conforms) {
     console.log(`  ${rel}: ${data.size} quad(s) — conforms: true`);
@@ -176,7 +196,13 @@ async function main() {
 
   const shapesTtl = await readFile(SHAPES, "utf8");
   const shapes = await turtleToDataset(shapesTtl);
-  const validator = new SHACLValidator(shapes, { factory: rdf });
+  // `targetResolvers` and `validations` enable SHACL-SPARQL. WITHOUT THEM the
+  // engine does not warn and does not throw — it silently SKIPS every sh:sparql
+  // shape and reports conforms: true. Measured on a graph whose only defect was
+  // a dependency cycle: default config returned conforms:true, with the opt-in
+  // it returned 4 results. fixtures/sparql.* + the required-to-fail test exist
+  // to make dropping these two options impossible to do quietly.
+  const validator = new SHACLValidator(shapes, { factory: rdf, targetResolvers, validations });
 
   if (mode !== "html") return validateDataset(validator);
 
@@ -200,7 +226,7 @@ async function main() {
       for (const q of ds) data.add(q);
     }
 
-    const report = validator.validate(data);
+    const report = await validator.validate({ dataset: data });
     if (report.conforms) {
       console.log(`  ${rel}: ${blocks.length} block(s) — conforms: true`);
     } else {

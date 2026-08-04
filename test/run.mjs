@@ -90,6 +90,49 @@ await test("gates/shacl-runner: --turtle with no path → usage error", async ()
   ok("gates/shacl-runner: --turtle with no path → usage error");
 });
 
+// 2e. SHACL-SPARQL RUNS AT ALL.
+//
+// Core SHACL cannot traverse a property path, so every cross-row invariant —
+// referential agreement, acyclicity, "this status implies that relationship" —
+// needs sh:sparql. The previous validator (rdf-validate-shacl) THREW on those at
+// every version, so this graph would have exited non-zero with an infrastructure
+// error rather than a verdict. Asserting the CONFORMING case is what separates
+// "the constraint ran and passed" from "the engine errored" — a distinction an
+// exit code alone would blur.
+await test("gates/shacl-runner: sh:sparql shapes + conforming data → conforms:true", async () => {
+  const out = runNode("gates/shacl-runner.mjs", [
+    join(FIX, "sparql.shapes.ttl"), "--turtle", join(FIX, "sparql.conforming.ttl"),
+  ]);
+  if (!/conforms: true/.test(out)) throw new Error("did not report conforms: true");
+  ok("gates/shacl-runner: sh:sparql shapes + conforming data → conforms:true", out.trim().split("\n").pop());
+});
+
+// 2f. THE SPARQL OPT-IN CANNOT BE DROPPED QUIETLY.
+//
+// shacl-engine ships CORE validations only. Without `targetResolvers` and
+// `validations` from shacl-engine/sparql.js it does not warn and does not throw
+// — it silently SKIPS every sh:sparql shape. Measured on this exact fixture:
+// default config returns conforms:TRUE on a cyclic graph; with the opt-in it
+// reports the cycle.
+//
+// That is a worse failure mode than the validator it replaces, which at least
+// threw loudly. This test is what makes the trade safe: drop either constructor
+// option and it goes red HERE, rather than silently disabling every relational
+// constraint every consumer has written.
+await test("gates/shacl-runner: sh:sparql violation → exit 1 (opt-in wired)", async () => {
+  const r = spawnSync("node", [
+    join(KIT, "gates/shacl-runner.mjs"),
+    join(FIX, "sparql.shapes.ttl"), "--turtle", join(FIX, "sparql.violating.ttl"),
+  ], { encoding: "utf8", cwd: KIT });
+  if (r.status !== 1) {
+    throw new Error(`expected exit 1, got ${r.status} — SHACL-SPARQL is probably not enabled; ` +
+      "check targetResolvers/validations in the Validator constructor");
+  }
+  const all = (r.stdout || "") + (r.stderr || "");
+  if (!/reachable from themselves/.test(all)) throw new Error("cycle violation not reported");
+  ok("gates/shacl-runner: sh:sparql violation → exit 1 (opt-in wired)", "cycle detected via property path");
+});
+
 // 3. structure-audit: sample built site → pass (baseline written to a work path).
 await test("integrity/structure-audit: sample site → pass", async () => {
   const out = runNode("integrity/structure-audit/audit.mjs", [join(FIX, "site")], { STRUCTURE_BASELINE: join(work, "structure.json") });
