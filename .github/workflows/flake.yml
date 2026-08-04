@@ -1,0 +1,69 @@
+name: flake
+
+# Builds the Nix derivation — the reproducible-CLI artifact this kit ships.
+#
+# WHY THIS EXISTS
+# ---------------
+# flake.nix declares every ck-* gate as a hash-pinned CLI, and `npmDepsHash`
+# content-addresses the ENTIRE dependency tree. That is what makes a consuming
+# site's vendored gate deterministic: the deps are fixed by hash, not re-resolved
+# at install time.
+#
+# Nothing built it. The consequences were already visible when this job was
+# added: flake.nix said version 0.8.0 while package.json said 0.11.0 — three
+# minors of drift — and any change to package-lock.json silently invalidated
+# npmDepsHash with nothing to report it. A reproducible-build path that is never
+# built is a claim, not a guarantee, and it decays in exactly one direction.
+#
+# This job is the forcing function. `nix build` fails loudly on a stale
+# npmDepsHash and prints the correct one, so a dependency change either updates
+# the hash or does not merge.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+concurrency:
+  group: flake-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+
+      - name: Version agreement (flake.nix vs package.json)
+        # Cheap, and it is the drift that revealed nobody was building this.
+        run: |
+          flake_v=$(sed -n 's/.*version = "\([^"]*\)".*/\1/p' flake.nix | head -1)
+          pkg_v=$(node -p "require('./package.json').version")
+          echo "flake.nix=$flake_v package.json=$pkg_v"
+          if [ "$flake_v" != "$pkg_v" ]; then
+            echo "::error::flake.nix version ($flake_v) != package.json version ($pkg_v)"
+            exit 1
+          fi
+
+      - name: nix build
+        # Fails on a stale npmDepsHash and prints the correct value, so a
+        # lockfile change cannot land while leaving the derivation unbuildable.
+        run: nix build --print-build-logs .
+
+      - name: The built CLI actually runs
+        # Building is not evidence the artifact works — the same distinction the
+        # gates' own fixtures draw. Exercises the shipped binary, including the
+        # SHACL-SPARQL path, against the repo's fixtures.
+        run: |
+          ./result/bin/ck-shacl-runner fixtures/jsonld.shapes.ttl --turtle fixtures/dataset.conforming.ttl
+          ./result/bin/ck-shacl-runner fixtures/sparql.shapes.ttl --turtle fixtures/sparql.conforming.ttl
+          # And it must still be able to FAIL from the built artifact, not only
+          # from the source tree.
+          if ./result/bin/ck-shacl-runner fixtures/sparql.shapes.ttl --turtle fixtures/sparql.violating.ttl; then
+            echo "::error::built ck-shacl-runner did not reject a cyclic graph — SHACL-SPARQL is not enabled in the artifact"
+            exit 1
+          fi
+          echo "built CLI: conforming passes, cyclic is rejected"
