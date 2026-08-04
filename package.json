@@ -88,5 +88,10 @@
     "stylelint-plugin-use-baseline": "^1.4.4",
     "turndown": "^7.2.4",
     "vnu-jar": "^26.6.24"
+  },
+  "overrides": {
+    "fast-uri": "^3.1.5",
+    "ip-address": "^10.3.1",
+    "undici": "^6.28.0"
   }
 }
