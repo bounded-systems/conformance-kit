@@ -1,0 +1,13 @@
+# A dataset that satisfies fixtures/jsonld.shapes.ttl — the POSITIVE fixture for
+# the --turtle input mode.
+#
+# Deliberately the same schema:Person contract the HTML path is tested against,
+# so the two input modes are proven to reach the same verdict from the same
+# shapes rather than each being checked against something convenient.
+
+@prefix schema: <https://schema.org/> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+
+<https://fixture.example/person/ada> a schema:Person ;
+  schema:name "Ada Lovelace"^^xsd:string ;
+  schema:url  <https://fixture.example/ada> .

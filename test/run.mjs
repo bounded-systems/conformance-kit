@@ -45,6 +45,51 @@ await test("gates/shacl-runner: sample shapes + HTML → conforms:true", async (
   ok("gates/shacl-runner: sample shapes + HTML → conforms:true", out.trim().split("\n").pop());
 });
 
+// 2b. SHACL: the SAME shapes against a DATASET rather than built HTML. Not every
+// artifact under conformance is a website — a database mirror, an export or a
+// manifest has no HTML to scrape, and emitting throwaway pages purely to carry
+// JSON-LD past the runner's front door would be fabricating an artifact to fit a
+// signature. Same shapes file as the HTML case above, deliberately: it proves
+// both input modes reach the same verdict from the same contract.
+await test("gates/shacl-runner: --turtle dataset → conforms:true", async () => {
+  const out = runNode("gates/shacl-runner.mjs", [
+    join(FIX, "jsonld.shapes.ttl"), "--turtle", join(FIX, "dataset.conforming.ttl"),
+  ]);
+  if (!/conforms: true/.test(out)) throw new Error("did not report conforms: true");
+  ok("gates/shacl-runner: --turtle dataset → conforms:true", out.trim().split("\n").pop());
+});
+
+// 2c. THE GATE MUST BE ABLE TO FAIL.
+//
+// Every SHACL case before this line asserts `conforms: true`. Nothing proved the
+// runner can report false or exit non-zero — and a gate never observed failing
+// is indistinguishable from one that CANNOT fail, which is the entire value it
+// provides. Asserts the exit code and that BOTH distinct violations are named,
+// so a runner that bailed after the first would not satisfy it.
+await test("gates/shacl-runner: violating dataset → exit 1, violations named", async () => {
+  const r = spawnSync("node", [
+    join(KIT, "gates/shacl-runner.mjs"),
+    join(FIX, "jsonld.shapes.ttl"), "--turtle", join(FIX, "dataset.violating.ttl"),
+  ], { encoding: "utf8", cwd: KIT });
+  if (r.status !== 1) throw new Error(`expected exit 1, got ${r.status}`);
+  const all = (r.stdout || "") + (r.stderr || "");
+  if (!/conforms: FALSE/.test(all)) throw new Error("did not report conforms: FALSE");
+  if (!/person\/nameless/.test(all)) throw new Error("missing-name violation not reported");
+  if (!/person\/bad-url/.test(all)) throw new Error("non-IRI url violation not reported");
+  ok("gates/shacl-runner: violating dataset → exit 1, violations named", "both violations named");
+});
+
+// 2d. A dataset flag with no path must REFUSE rather than silently fall back to
+// scanning HTML. A gate that validates something other than what you named is
+// worse than one that declines to run.
+await test("gates/shacl-runner: --turtle with no path → usage error", async () => {
+  const r = spawnSync("node", [
+    join(KIT, "gates/shacl-runner.mjs"), join(FIX, "jsonld.shapes.ttl"), "--turtle",
+  ], { encoding: "utf8", cwd: KIT });
+  if (r.status !== 2) throw new Error(`expected exit 2 (usage), got ${r.status}`);
+  ok("gates/shacl-runner: --turtle with no path → usage error");
+});
+
 // 3. structure-audit: sample built site → pass (baseline written to a work path).
 await test("integrity/structure-audit: sample site → pass", async () => {
   const out = runNode("integrity/structure-audit/audit.mjs", [join(FIX, "site")], { STRUCTURE_BASELINE: join(work, "structure.json") });
