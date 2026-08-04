@@ -1,0 +1,40 @@
+# A SHACL-SPARQL contract — shapes that CORE SHACL CANNOT EXPRESS.
+#
+# The constraint below walks a transitive property path (`schema:knows+`) to find
+# nodes reachable from themselves. Core SHACL has no way to say that: sh:disjoint,
+# sh:not and friends compare values, they cannot traverse. Cross-row invariants
+# like referential agreement, acyclicity, and "this status implies that
+# relationship" all land here — which is why a runner that cannot execute
+# sh:sparql can enforce only per-node structure.
+#
+# This file is a FIXTURE, not a kit file: it exists so the suite can prove the
+# runner executes SPARQL-based constraints at all. `rdf-validate-shacl`, which
+# this gate used before, threw on it at every version:
+#     Error: Cannot find validator for constraint component sh#SPARQLConstraintComponent
+#
+# NOTE the sh:prefixes block. SHACL-SPARQL requires a SPARQL-based constraint to
+# declare its own prefixes — the @prefix lines below are Turtle syntax and do not
+# reach inside the sh:select string. Some engines (pyshacl) resolve them from the
+# shapes graph anyway; shacl-engine, correctly, does not: without this it fails
+# with `Unknown prefix: schema`.
+
+@prefix sh:     <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+
+schema:prefixes
+  sh:declare [
+    sh:prefix "schema" ;
+    sh:namespace "https://schema.org/"^^xsd:anyURI ;
+  ] .
+
+schema:NoAcquaintanceCycleShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Person ;
+  sh:severity sh:Violation ;
+  sh:sparql [
+    sh:prefixes schema:prefixes ;
+    sh:message "Person is reachable from themselves via schema:knows" ;
+    sh:select """
+      SELECT $this WHERE { $this schema:knows+ $this }""" ;
+  ] .

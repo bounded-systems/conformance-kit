@@ -1,0 +1,25 @@
+# An acquaintance chain with no cycle — satisfies fixtures/sparql.shapes.ttl.
+#
+# This fixture's job is to prove the SPARQL constraint RUNS rather than merely
+# that it can fail. Before the engine swap the runner THREW on any sh:sparql
+# shape, so this graph would have exited non-zero with an infrastructure error
+# rather than reporting conforms: true.
+#
+# Three hops, so the transitive path has something to traverse: a → b → c.
+
+@prefix schema: <https://schema.org/> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+
+<https://fixture.example/person/a> a schema:Person ;
+  schema:name "Ada"^^xsd:string ;
+  schema:url  <https://fixture.example/a> ;
+  schema:knows <https://fixture.example/person/b> .
+
+<https://fixture.example/person/b> a schema:Person ;
+  schema:name "Bea"^^xsd:string ;
+  schema:url  <https://fixture.example/b> ;
+  schema:knows <https://fixture.example/person/c> .
+
+<https://fixture.example/person/c> a schema:Person ;
+  schema:name "Cai"^^xsd:string ;
+  schema:url  <https://fixture.example/c> .

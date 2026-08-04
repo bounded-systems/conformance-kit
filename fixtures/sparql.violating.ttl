@@ -1,0 +1,36 @@
+# An acquaintance CYCLE — violates fixtures/sparql.shapes.ttl.
+#
+# THIS IS THE FIXTURE THAT MUST FAIL, and it guards a specific, measured hazard.
+#
+# shacl-engine ships core validations only; SHACL-SPARQL is opt-in via
+# `targetResolvers` and `validations` from `shacl-engine/sparql.js`. Drop those
+# two constructor options and the engine does not warn and does not throw — it
+# silently skips every sh:sparql shape. Measured on exactly this shape of graph:
+#
+#     default config      → conforms: TRUE     ← the cycle is invisible
+#     with the sparql opt-in → conforms: false, cycle reported
+#
+# A gate that reports conforms:true on a cyclic graph is worse than no gate: it
+# launders the absence of checking into a pass. So the suite requires this file
+# to be REJECTED, which makes removing the opt-in impossible to do quietly.
+#
+# Three-node cycle rather than two, so it cannot be caught by a naive
+# one-hop/self-reference check that never exercises the transitive path.
+
+@prefix schema: <https://schema.org/> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+
+<https://fixture.example/person/x> a schema:Person ;
+  schema:name "Xan"^^xsd:string ;
+  schema:url  <https://fixture.example/x> ;
+  schema:knows <https://fixture.example/person/y> .
+
+<https://fixture.example/person/y> a schema:Person ;
+  schema:name "Yol"^^xsd:string ;
+  schema:url  <https://fixture.example/y> ;
+  schema:knows <https://fixture.example/person/z> .
+
+<https://fixture.example/person/z> a schema:Person ;
+  schema:name "Zed"^^xsd:string ;
+  schema:url  <https://fixture.example/z> ;
+  schema:knows <https://fixture.example/person/x> .

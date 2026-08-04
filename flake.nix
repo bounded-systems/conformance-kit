@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        version = "0.8.0";
+        version = "0.11.0";
 
         # Every ck-* bin the package.json declares (kept in sync with "bin").
         bins = [
@@ -49,7 +49,9 @@
           pname = "conformance-kit";
           inherit version;
           src = ./.;
-          npmDepsHash = "sha256-cnzJA3NEG9ZkB2dZzIyXFJKjJmX8czariuTi7NjYg40=";
+          # Recomputed when package-lock.json changes; the `flake` CI job fails
+          # with the correct value if this is stale.
+          npmDepsHash = "sha256-MltNN6K9iTNhpgOJLUlt8JtJRJLmnPEbdUWElVFwqww=";
           dontNpmBuild = true; # the kit has no build step (pure .mjs)
 
           nativeBuildInputs = [ pkgs.makeWrapper ];
