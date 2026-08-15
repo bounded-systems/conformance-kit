@@ -51,7 +51,7 @@
           src = ./.;
           # Recomputed when package-lock.json changes; the `flake` CI job fails
           # with the correct value if this is stale.
-          npmDepsHash = "sha256-MltNN6K9iTNhpgOJLUlt8JtJRJLmnPEbdUWElVFwqww=";
+          npmDepsHash = "sha256-9ej1qLVWh0ACv33DJXYITwhKRENihfRP/WRdN3cU5Bk=";
           dontNpmBuild = true; # the kit has no build step (pure .mjs)
 
           nativeBuildInputs = [ pkgs.makeWrapper ];
